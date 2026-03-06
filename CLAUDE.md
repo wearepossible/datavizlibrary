@@ -32,23 +32,25 @@ The Airtable base contains ~400 records with ~1.6GB total attachments. Exact col
 
 ## Migration Plan
 
-### Phase 1: Export from Airtable
-- Use the Airtable API to fetch all records with metadata
-- Download all image attachments (Airtable API provides temporary download URLs)
-- Save metadata as structured JSON
-- Organise downloaded images into a sensible folder structure
+### Phase 1: Export from Airtable — DONE
+- Exported 437 records, 430 PNGs, 416 SVGs (~1.4GB)
+- Text extracted from images via SVG XML parsing + Tesseract OCR (418/437 records)
+- 16 records have no images in Airtable; hidden from search via `has_images` flag
+- **Note**: Campaign field is a linked record (list type) in Airtable, not a string
 
-### Phase 2: Upload images to Cloudflare R2
-- Create an R2 bucket
-- Upload all images with predictable URL paths
-- Update JSON metadata to reference R2 URLs instead of Airtable URLs
+### Phase 2: Upload images to Cloudflare R2 — DONE
+- Bucket: `possible-dataviz-library` (EU jurisdiction)
+- Public URL: `https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev`
+- 846 files uploaded
+- **Note**: EU jurisdiction requires `.eu.` in endpoint URL
 
-### Phase 3: Build the static browsing interface
-- Single-page app loading the JSON data file
-- Universal search: single text input that searches across all fields (headline, campaign, relevant cities, tags, data source, status) and shows results filtered by relevancy — no dropdowns or separate filter controls, just type and find
-- Image preview with click-to-enlarge, download as PNG or SVG
-- Clean, fast, minimal design suitable for a professional org
-- Mobile-friendly
+### Phase 3: Build the static browsing interface — DONE
+- Vanilla HTML/CSS/JS, no build step
+- Universal search with exact phrase match boosting
+- Possible brand: #321D49 (deep purple), #BF0978 (magenta), Poppins font
+- No rounded corners (design choice)
+- Responsive: search wraps to second line on mobile
+- Lightbox with PNG/SVG download and metadata
 
 ### Phase 3b: Build an upload/edit form
 - A separate page or interface for admin to add new records
@@ -95,19 +97,21 @@ The Airtable base contains ~400 records with ~1.6GB total attachments. Exact col
 project/
 ├── CLAUDE.md
 ├── .env                    # API keys (gitignored)
+├── .gitignore              # Ignores .env and data/images/
+├── requirements.txt        # Python deps: requests, python-dotenv, pytesseract, Pillow, cairosvg, boto3
 ├── scripts/
 │   ├── export_airtable.py  # Phase 1: fetch records + download images
+│   ├── text_utils.py       # Shared text extraction (SVG XML + OCR)
+│   ├── extract_text.py     # Batch text extraction into export.json
 │   ├── upload_to_r2.py     # Phase 2: upload images to R2
 │   └── update_urls.py      # Phase 2: rewrite JSON with R2 URLs
 ├── admin/
-│   └── admin.py            # Local web app for adding/editing records
-│                           # (runs on localhost, provides a nice form UI,
-│                           #  uploads images to R2, updates data.json,
-│                           #  and optionally git commits + pushes to trigger deploy)
+│   └── admin.py            # Local web app for adding/editing records (TODO)
 ├── site/
 │   ├── index.html          # Main browsing interface
 │   ├── style.css
 │   ├── app.js
+│   ├── logo.png            # White Possible logo on transparent
 │   └── data.json           # Record metadata with R2 image URLs
 └── data/
     ├── export.json          # Raw Airtable export (intermediate)

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Visualization Library — Possible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="header-brand">
+        <a href="/" class="logo-link">
+          <img src="logo.png" alt="Possible" class="logo">
+        </a>
+        <span class="header-subtitle">Dataviz Library</span>
+      </div>
+      <div class="header-search">
+        <input type="text" id="search" placeholder="Search headlines, campaigns, tags..." autofocus>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty hidden">No results found.</div>
+  </main>
+
+  <!-- Lightbox overlay -->
+  <div id="lightbox" class="lightbox hidden">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" aria-label="Close">&times;</button>
+      <img id="lightbox-img" src="" alt="">
+      <div class="lightbox-meta">
+        <h2 id="lightbox-title"></h2>
+        <div id="lightbox-details"></div>
+        <div id="lightbox-links" class="lightbox-links"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>

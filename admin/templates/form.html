@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if record else "Add" }} Record{% endblock %}
+
+{% block content %}
+<div class="form-header">
+  <h1>{{ "Edit" if record else "Add New" }} Record</h1>
+  {% if record %}
+  <form method="post" action="{{ url_for('delete', record_id=record.id) }}" class="delete-form">
+    <button type="submit" class="btn-delete" onclick="return confirm('Delete this record? This cannot be undone.')">Delete</button>
+  </form>
+  {% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data" class="record-form">
+  <div class="form-group">
+    <label for="headline">Headline *</label>
+    <input type="text" id="headline" name="headline" value="{{ record.headline if record else '' }}" required>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Campaign <span class="hint">(select one or more)</span></label>
+      <div class="multiselect" id="campaign-select">
+        {% set current_campaigns = record.campaign.split(', ') if record and record.campaign else [] %}
+        {% for c in campaigns %}
+        <label class="checkbox-label">
+          <input type="checkbox" name="campaign" value="{{ c }}"
+                 {{ 'checked' if c in current_campaigns else '' }}>
+          {{ c }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="status">Status</label>
+      <input type="text" id="status" name="status" list="status-list"
+             value="{{ record.status if record else '' }}">
+      <datalist id="status-list">
+        {% for s in statuses %}<option value="{{ s }}">{% endfor %}
+      </datalist>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="tags">Tags <span class="hint">comma-separated, with autocomplete</span></label>
+    <input type="text" id="tags" name="tags"
+           value="{{ record.tags|join(', ') if record and record.tags else '' }}">
+    <div class="autocomplete-suggestions" id="tag-suggestions"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="relevant_cities">Relevant Cities <span class="hint">comma-separated, with autocomplete</span></label>
+    <input type="text" id="relevant_cities" name="relevant_cities"
+           value="{{ record.relevant_cities|join(', ') if record and record.relevant_cities is iterable and record.relevant_cities is not string else (record.relevant_cities if record else '') }}">
+    <div class="autocomplete-suggestions" id="city-suggestions"></div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="data_source">Data Source</label>
+      <input type="text" id="data_source" name="data_source"
+             value="{{ record.data_source if record else '' }}">
+    </div>
+    <div class="form-group">
+      <label for="data_link">Data Link</label>
+      <input type="url" id="data_link" name="data_link"
+             value="{{ record.data_link if record else '' }}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="published_link">Published Link</label>
+    <input type="url" id="published_link" name="published_link"
+           value="{{ record.published_link if record else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label for="last_updated">Last Updated</label>
+    <input type="date" id="last_updated" name="last_updated"
+           value="{{ record.last_updated if record else '' }}">
+  </div>
+
+  <div class="form-row">
+    <div class="form-group file-group">
+      <label for="png_image">PNG Image{% if record and record.png_urls %} <span class="hint">(replace)</span>{% endif %}</label>
+      {% if record and record.png_urls %}
+        <div class="current-image">
+          <img src="{{ record.png_urls[0] }}" alt="Current PNG">
+        </div>
+      {% endif %}
+      <input type="file" id="png_image" name="png_image" accept=".png,image/png">
+    </div>
+    <div class="form-group file-group">
+      <label for="svg_image">SVG Image{% if record and record.svg_urls %} <span class="hint">(replace)</span>{% endif %}</label>
+      {% if record and record.svg_urls %}
+        <div class="current-image">
+          <img src="{{ record.svg_urls[0] }}" alt="Current SVG">
+        </div>
+      {% endif %}
+      <input type="file" id="svg_image" name="svg_image" accept=".svg,image/svg+xml">
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn-primary">{{ "Save Changes" if record else "Add Record" }}</button>
+    <a href="{{ url_for('index') }}" class="btn-secondary">Cancel</a>
+  </div>
+</form>
+
+<script>
+// Autocomplete for comma-separated fields
+const allTags = {{ all_tags|tojson }};
+const allCities = {{ all_cities|tojson }};
+
+function setupAutocomplete(inputId, suggestionsId, options) {
+  const input = document.getElementById(inputId);
+  const container = document.getElementById(suggestionsId);
+
+  input.addEventListener('input', function() {
+    const value = this.value;
+    const lastComma = value.lastIndexOf(',');
+    const current = (lastComma >= 0 ? value.substring(lastComma + 1) : value).trim().toLowerCase();
+
+    container.innerHTML = '';
+    if (current.length < 1) return;
+
+    const existing = value.substring(0, lastComma >= 0 ? lastComma : 0)
+      .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    const matches = options.filter(o =>
+      o.toLowerCase().includes(current) && !existing.includes(o.toLowerCase())
+    ).slice(0, 8);
+
+    matches.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'suggestion';
+      div.textContent = m;
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        const prefix = lastComma >= 0 ? value.substring(0, lastComma + 1) + ' ' : '';
+        input.value = prefix + m + ', ';
+        container.innerHTML = '';
+        input.focus();
+      });
+      container.appendChild(div);
+    });
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(() => container.innerHTML = '', 200);
+  });
+}
+
+setupAutocomplete('tags', 'tag-suggestions', allTags);
+setupAutocomplete('relevant_cities', 'city-suggestions', allCities);
+
+// Filter campaign checkboxes
+const campaignSelect = document.getElementById('campaign-select');
+if (campaignSelect && campaignSelect.children.length > 10) {
+  const filter = document.createElement('input');
+  filter.type = 'text';
+  filter.placeholder = 'Filter campaigns...';
+  filter.className = 'multiselect-filter';
+  filter.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    campaignSelect.querySelectorAll('.checkbox-label').forEach(label => {
+      label.style.display = label.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+  campaignSelect.insertBefore(filter, campaignSelect.firstChild);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+requests
+python-dotenv
+pytesseract
+Pillow
+cairosvg
+boto3
+flask

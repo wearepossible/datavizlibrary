@@ -1,0 +1,356 @@
+/* ── Reset & base ──────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f5f3f7;
+  color: #321D49;
+  line-height: 1.5;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+
+header {
+  background: #321D49;
+  color: #fff;
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(50, 29, 73, 0.3);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo {
+  height: 42px;
+  width: auto;
+}
+
+.header-subtitle {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+/* ── Search (in header) ───────────────────────────────────────────────── */
+
+.header-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#search {
+  width: 100%;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#search::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+#search:focus {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+
+/* ── Grid ──────────────────────────────────────────────────────────────── */
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+
+.card {
+  background: #fff;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(50, 29, 73, 0.08);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border-bottom: 3px solid transparent;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(50, 29, 73, 0.12);
+  border-bottom-color: #BF0978;
+}
+
+.card-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #faf9fb;
+  padding: 0.5rem;
+}
+
+.card-body {
+  padding: 0.75rem 1rem 1rem;
+}
+
+.card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-campaign {
+  font-size: 0.72rem;
+  color: #BF0978;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  background: #f0ecf3;
+  color: #321D49;
+  border-radius: 0;
+  white-space: nowrap;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+
+.empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #999;
+  font-size: 1.1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+/* ── Lightbox ──────────────────────────────────────────────────────────── */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox.hidden {
+  display: none;
+}
+
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(50, 29, 73, 0.88);
+}
+
+.lightbox-content {
+  position: relative;
+  background: #fff;
+  border-radius: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #321D49;
+  cursor: pointer;
+  z-index: 1;
+  line-height: 1;
+}
+
+.lightbox-close:hover {
+  color: #BF0978;
+}
+
+#lightbox-img {
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  padding: 1.5rem;
+  background: #faf9fb;
+}
+
+.lightbox-meta {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.lightbox-meta h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+#lightbox-details {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.7;
+}
+
+#lightbox-details .detail-label {
+  color: #321D49;
+  font-weight: 600;
+}
+
+.lightbox-links {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lightbox-links a {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+
+.btn-primary {
+  background: #BF0978;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #a00766;
+}
+
+.btn-secondary {
+  background: #f0ecf3;
+  color: #321D49;
+}
+
+.btn-secondary:hover {
+  background: #e0dae6;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .header-brand {
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .logo {
+    height: 30px;
+  }
+
+  .header-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .header-search {
+    width: 100%;
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .card-body {
+    padding: 0.5rem 0.75rem 0.75rem;
+  }
+
+  .card-title {
+    font-size: 0.78rem;
+  }
+
+  .lightbox-content {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+}
