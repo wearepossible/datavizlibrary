@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>Data Visualization Library — Possible</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,6 +43,54 @@
       </div>
     </div>
   </div>
+
+  <!-- Password gate -->
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-box">
+      <img src="logo.png" alt="Possible" class="auth-logo">
+      <h1>Dataviz Library</h1>
+      <form id="auth-form">
+        <input type="password" id="auth-password" placeholder="Password" autofocus>
+        <button type="submit">Enter</button>
+      </form>
+      <div id="auth-error" class="auth-error hidden">Incorrect password</div>
+      <div class="auth-hint">If you don't know the password, ask Duncan.</div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    const PASS_HASH = 'd5be2d831e628a91bbb642604713ea9500a2c9a86f372dfedae429c6c3762ddd';
+    const gate = document.getElementById('auth-gate');
+
+    async function hashPass(pw) {
+      const enc = new TextEncoder().encode(pw);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    if (sessionStorage.getItem('dvl_auth') === 'ok') {
+      gate.classList.add('hidden');
+      document.getElementById('search').focus();
+    } else {
+      document.body.classList.add('locked');
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const pw = document.getElementById('auth-password').value;
+      const hash = await hashPass(pw);
+      if (hash === PASS_HASH) {
+        sessionStorage.setItem('dvl_auth', 'ok');
+        gate.classList.add('hidden');
+        document.body.classList.remove('locked');
+        document.getElementById('search').focus();
+      } else {
+        document.getElementById('auth-error').classList.remove('hidden');
+      }
+    });
+  })();
+  </script>
 
   <script src="app.js?v=2"></script>
 </body>
