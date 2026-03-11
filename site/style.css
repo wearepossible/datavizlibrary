@@ -133,6 +133,19 @@ main {
   padding: 0.5rem;
 }
 
+.card-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ebe8ef;
+  color: #9a8fad;
+  font-size: 0.8rem;
+}
+
+.card-img-placeholder::after {
+  content: "No image";
+}
+
 .card-body {
   padding: 0.75rem 1rem 1rem;
 }

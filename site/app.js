@@ -1,6 +1,7 @@
 // ── Data Viz Library ────────────────────────────────────────────────────
 
 let allRecords = [];
+let defaultRecords = [];
 
 const SEARCH_FIELDS = [
   "headline",
@@ -18,10 +19,12 @@ async function init() {
   const resp = await fetch("data.json");
   const data = await resp.json();
 
-  // Only show records that have images, in random order
-  allRecords = shuffle(data.filter((r) => r.has_images));
+  allRecords = data;
 
-  render(allRecords);
+  // Default grid shows only records with images, in random order
+  defaultRecords = shuffle(data.filter((r) => r.has_images));
+
+  render(defaultRecords);
 
   document.getElementById("search").addEventListener("input", onSearch);
   document.addEventListener("keydown", onKeydown);
@@ -39,8 +42,8 @@ function onSearch(e) {
   const query = e.target.value.trim().toLowerCase();
 
   if (!query) {
-    render(allRecords);
-    updateCount(allRecords.length, allRecords.length);
+    render(defaultRecords);
+    updateCount(defaultRecords.length, defaultRecords.length);
     return;
   }
 
@@ -102,6 +105,9 @@ function render(records) {
   grid.innerHTML = records
     .map((r) => {
       const imgUrl = r.png_urls?.[0] || r.svg_urls?.[0] || "";
+      const imgHtml = imgUrl
+        ? `<img class="card-img" src="${esc(imgUrl)}" alt="${esc(r.headline)}" loading="lazy">`
+        : `<div class="card-img card-img-placeholder"></div>`;
       const campaign = r.campaign ? `<div class="card-campaign">${esc(r.campaign)}</div>` : "";
       const tags = (r.tags || [])
         .map((t) => `<span class="tag">${esc(t)}</span>`)
@@ -109,7 +115,7 @@ function render(records) {
 
       return `
       <div class="card" data-id="${esc(r.id)}">
-        <img class="card-img" src="${esc(imgUrl)}" alt="${esc(r.headline)}" loading="lazy">
+        ${imgHtml}
         <div class="card-body">
           <div class="card-title">${esc(r.headline)}</div>
           ${campaign}
