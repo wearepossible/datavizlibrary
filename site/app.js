@@ -18,8 +18,8 @@ async function init() {
   const resp = await fetch("data.json");
   const data = await resp.json();
 
-  // Only show records that have images
-  allRecords = data.filter((r) => r.has_images);
+  // Only show records that have images, in random order
+  allRecords = shuffle(data.filter((r) => r.has_images));
 
   render(allRecords);
 
@@ -196,6 +196,15 @@ function onKeydown(e) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function esc(str) {
   const div = document.createElement("div");
