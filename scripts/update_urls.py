@@ -1,14 +1,18 @@
 """
-Phase 2b: Update export.json with R2 public URLs and write site/data.json.
+Phase 2b: Generate the final site/data.json from the intermediate export.
+
+Reads data/export.json (which stores bare image filenames), prepends the R2
+public base URL to each filename to produce full URLs, and writes the result
+to site/data.json — the file loaded by the static browsing interface.
+
+This is the bridge between the migration scripts (which work with local files)
+and the static site (which loads images over HTTP from R2).
 
 Usage:
     python scripts/update_urls.py <base-url>
 
 Example:
     python scripts/update_urls.py https://pub-abc123.r2.dev
-
-This reads data/export.json, adds full R2 URLs to each record's image fields,
-and writes the final site/data.json for the static site.
 """
 
 import json
@@ -32,12 +36,12 @@ def main():
     with open(EXPORT_FILE) as f:
         data = json.load(f)
 
+    # Convert bare filenames (e.g. "slug.png") into full public URLs
     for record in data:
-        # Build full URLs from filenames
         record["png_urls"] = [f"{base_url}/{f}" for f in record.get("png_files", [])]
         record["svg_urls"] = [f"{base_url}/{f}" for f in record.get("svg_files", [])]
 
-    # Write site data
+    # Write the file that the static site's app.js fetches at load time
     SITE_DIR.mkdir(exist_ok=True)
     with open(SITE_DATA, "w") as f:
         json.dump(data, f, indent=2)

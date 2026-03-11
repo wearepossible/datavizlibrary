@@ -1,6 +1,14 @@
 """
 Phase 1: Export all records from Airtable and download image attachments.
 
+Connects to the Airtable API, paginates through every record in the configured
+table, and saves cleaned metadata to data/export.json.  Image attachments (PNG
+and SVG) are downloaded to data/images/ with human-readable slug filenames
+derived from each record's campaign and headline.
+
+Note: Airtable attachment URLs expire after a few hours, so images must be
+downloaded in the same run as the record fetch.
+
 Usage:
     python scripts/export_airtable.py
 
@@ -36,11 +44,14 @@ EXPORT_FILE = DATA_DIR / "export.json"
 
 
 def slugify(text):
-    """Convert text to a clean filename slug."""
+    """Convert text to a clean filename slug.
+
+    Example: "CO2 Emissions by Country (2024)" -> "co2-emissions-by-country-2024"
+    """
     text = text.lower().strip()
-    text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(r"[\s_]+", "-", text)
-    text = re.sub(r"-+", "-", text)
+    text = re.sub(r"[^\w\s-]", "", text)   # Strip punctuation
+    text = re.sub(r"[\s_]+", "-", text)     # Spaces/underscores -> hyphens
+    text = re.sub(r"-+", "-", text)         # Collapse consecutive hyphens
     return text.strip("-")
 
 
@@ -82,7 +93,11 @@ def download_image(url, dest_path):
 
 
 def fetch_all_records():
-    """Paginate through the Airtable API and return all records."""
+    """Paginate through the Airtable API and return all records.
+
+    Airtable returns up to 100 records per page.  Each response includes an
+    "offset" token when more pages remain; we keep fetching until it's absent.
+    """
     records = []
     offset = None
 
@@ -103,7 +118,7 @@ def fetch_all_records():
         if not offset:
             break
 
-        time.sleep(0.2)  # Be polite to the API
+        time.sleep(0.2)  # Rate-limit: Airtable allows 5 req/s on free tier
 
     return records
 
@@ -112,8 +127,13 @@ def fetch_all_records():
 
 
 def process_records(raw_records):
-    """
-    Convert raw Airtable records into our clean format and download images.
+    """Convert raw Airtable records into our clean format and download images.
+
+    For each record we:
+      1. Extract and normalise the metadata fields
+      2. Generate a human-readable slug for image filenames
+      3. Download attached PNG and SVG images to data/images/
+      4. Build a clean dict ready for export.json
     """
     IMAGE_DIR.mkdir(parents=True, exist_ok=True)
     processed = []
@@ -122,6 +142,9 @@ def process_records(raw_records):
     for i, record in enumerate(raw_records):
         fields = record.get("fields", {})
         headline = fields.get("Headline", "").strip()
+
+        # Campaign is a linked record in Airtable, so it arrives as a list
+        # of strings rather than a plain string.  Normalise to comma-joined.
         raw_campaign = fields.get("Campaign", "")
         if isinstance(raw_campaign, list):
             campaign = ", ".join(raw_campaign).strip()
@@ -136,7 +159,7 @@ def process_records(raw_records):
 
         base_slug = make_image_slug(campaign, headline)
 
-        # Handle slug collisions
+        # Handle slug collisions by appending a numeric suffix (-2, -3, ...)
         slug = base_slug
         counter = 2
         while slug in used_slugs:
@@ -144,7 +167,8 @@ def process_records(raw_records):
             counter += 1
         used_slugs.add(slug)
 
-        # Download images
+        # Download PNG and SVG attachments.  Each field can hold multiple
+        # files; we number them with a suffix (-2, -3, ...) when > 1.
         png_files = []
         svg_files = []
 
@@ -178,7 +202,7 @@ def process_records(raw_records):
             except Exception as e:
                 print(f"  [{i+1}/{len(raw_records)}] FAILED {filename}: {e}")
 
-        # Build clean record
+        # Build clean record — the slug becomes the record ID used everywhere
         entry = {
             "id": slug,
             "headline": headline,
@@ -216,7 +240,7 @@ def main():
     print(f"\nProcessing records and downloading images...")
     processed = process_records(raw_records)
 
-    # Save export
+    # Write the intermediate export file (consumed by later pipeline steps)
     EXPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(EXPORT_FILE, "w") as f:
         json.dump(processed, f, indent=2)
