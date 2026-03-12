@@ -1,3 +1,7 @@
+{# Record list page — shows all records with thumbnail, headline, and metadata.
+   Each row links to the edit form.  Includes a live client-side filter and a
+   deploy button that commits + pushes data.json to trigger a Netlify rebuild. #}
+
 {% extends "base.html" %}
 {% block title %}Records{% endblock %}
 
@@ -14,6 +18,7 @@
 
 <div class="record-list" id="record-list">
   {% for r in records %}
+  {# data-searchable stores a lowercase string for the client-side filter JS #}
   <div class="record-row-wrap" data-searchable="{{ r.headline|lower }} {{ r.campaign|lower }} {{ r.tags|join(' ')|lower }} {{ r.status|lower }}">
     <a href="{{ url_for('edit', record_id=r.id) }}" class="record-row">
       <div class="record-thumb">
@@ -43,6 +48,8 @@
 </div>
 
 <script>
+// Client-side live filter: hides rows that don't match the search terms.
+// Uses the data-searchable attribute pre-computed in the template above.
 document.getElementById('live-search').addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
   const terms = q.split(/\s+/).filter(Boolean);

@@ -1,3 +1,11 @@
+{# Add/edit record form.
+   When `record` is None this is the "add new" form; otherwise it's pre-filled
+   for editing.  Images are uploaded directly to R2 on submit.
+
+   JavaScript at the bottom provides:
+     - Autocomplete for Tags and Cities (comma-separated fields)
+     - Campaign checkbox filter (when there are > 10 campaigns) #}
+
 {% extends "base.html" %}
 {% block title %}{{ "Edit" if record else "Add" }} Record{% endblock %}
 
@@ -12,12 +20,14 @@
 </div>
 
 <form method="post" enctype="multipart/form-data" class="record-form">
+  <!-- Headline is the only required field — it drives the slug/filename -->
   <div class="form-group">
     <label for="headline">Headline *</label>
     <input type="text" id="headline" name="headline" value="{{ record.headline if record else '' }}" required>
   </div>
 
   <div class="form-row">
+    <!-- Campaign: multi-select checkboxes populated from existing records -->
     <div class="form-group">
       <label>Campaign <span class="hint">(select one or more)</span></label>
       <div class="multiselect" id="campaign-select">
@@ -31,6 +41,7 @@
         {% endfor %}
       </div>
     </div>
+    <!-- Status: free text with datalist suggestions from existing values -->
     <div class="form-group">
       <label for="status">Status</label>
       <input type="text" id="status" name="status" list="status-list"
@@ -41,6 +52,7 @@
     </div>
   </div>
 
+  <!-- Tags and Cities: comma-separated with autocomplete suggestions -->
   <div class="form-group">
     <label for="tags">Tags <span class="hint">comma-separated, with autocomplete</span></label>
     <input type="text" id="tags" name="tags"
@@ -80,6 +92,7 @@
            value="{{ record.last_updated if record else '' }}">
   </div>
 
+  <!-- Image uploads — on edit, shows the current image with a "replace" hint -->
   <div class="form-row">
     <div class="form-group file-group">
       <label for="png_image">PNG Image{% if record and record.png_urls %} <span class="hint">(replace)</span>{% endif %}</label>
@@ -108,7 +121,10 @@
 </form>
 
 <script>
-// Autocomplete for comma-separated fields
+// ── Autocomplete for comma-separated fields ──
+// Tags and Cities inputs support typing a partial value and selecting from
+// existing values used across all records.  The autocomplete works on the
+// text after the last comma, so multiple values can be entered.
 const allTags = {{ all_tags|tojson }};
 const allCities = {{ all_cities|tojson }};
 
@@ -119,14 +135,17 @@ function setupAutocomplete(inputId, suggestionsId, options) {
   input.addEventListener('input', function() {
     const value = this.value;
     const lastComma = value.lastIndexOf(',');
+    // Extract the text after the last comma (the "current" item being typed)
     const current = (lastComma >= 0 ? value.substring(lastComma + 1) : value).trim().toLowerCase();
 
     container.innerHTML = '';
     if (current.length < 1) return;
 
+    // Build a list of already-entered items to exclude from suggestions
     const existing = value.substring(0, lastComma >= 0 ? lastComma : 0)
       .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
+    // Show up to 8 matching suggestions not already in the input
     const matches = options.filter(o =>
       o.toLowerCase().includes(current) && !existing.includes(o.toLowerCase())
     ).slice(0, 8);
@@ -136,7 +155,7 @@ function setupAutocomplete(inputId, suggestionsId, options) {
       div.className = 'suggestion';
       div.textContent = m;
       div.addEventListener('mousedown', function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Keep focus on input
         const prefix = lastComma >= 0 ? value.substring(0, lastComma + 1) + ' ' : '';
         input.value = prefix + m + ', ';
         container.innerHTML = '';
@@ -146,6 +165,8 @@ function setupAutocomplete(inputId, suggestionsId, options) {
     });
   });
 
+  // Hide suggestions when the input loses focus (with a small delay so
+  // click events on suggestions can fire first)
   input.addEventListener('blur', function() {
     setTimeout(() => container.innerHTML = '', 200);
   });
@@ -154,7 +175,9 @@ function setupAutocomplete(inputId, suggestionsId, options) {
 setupAutocomplete('tags', 'tag-suggestions', allTags);
 setupAutocomplete('relevant_cities', 'city-suggestions', allCities);
 
-// Filter campaign checkboxes
+// ── Campaign checkbox filter ──
+// When there are many campaigns, inject a filter input at the top of the
+// checkbox list so the admin can quickly find the right one.
 const campaignSelect = document.getElementById('campaign-select');
 if (campaignSelect && campaignSelect.children.length > 10) {
   const filter = document.createElement('input');

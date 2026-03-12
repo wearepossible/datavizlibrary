@@ -1,3 +1,14 @@
+/*
+ * Possible Dataviz Library — Admin Tool Styles
+ *
+ * Styles for the local Flask admin interface (admin/admin.py).
+ * Shares the same brand colours as the public site:
+ *   Deep purple: #321D49    Magenta: #BF0978    Poppins font
+ *
+ * Layout is narrower (960px max) than the public site since this is a
+ * single-column management interface, not a gallery grid.
+ */
+
 /* ── Reset & base ──────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
@@ -90,6 +101,7 @@ nav a:hover {
 }
 
 /* ── Flash messages ────────────────────────────────────────────────────── */
+/* Success/error banners shown after add/edit/delete/deploy actions */
 
 .flash-container {
   max-width: 960px;
@@ -135,6 +147,7 @@ h1 .count {
 }
 
 /* ── List page ─────────────────────────────────────────────────────────── */
+/* Record listing with live client-side filtering and a deploy button */
 
 .list-header {
   display: flex;
@@ -166,6 +179,7 @@ h1 .count {
   border-color: #321D49;
 }
 
+/* Deploy button — green to distinguish from other actions */
 .btn-deploy {
   padding: 0.4rem 1rem;
   font-size: 0.8rem;
@@ -184,6 +198,7 @@ h1 .count {
 }
 
 /* ── Record list ───────────────────────────────────────────────────────── */
+/* Compact row-based list; each row links to the edit form */
 
 .record-list {
   display: flex;
@@ -262,6 +277,7 @@ h1 .count {
 }
 
 /* ── Form ──────────────────────────────────────────────────────────────── */
+/* Add/edit record form — used by form.html template */
 
 .form-header {
   display: flex;
@@ -302,7 +318,7 @@ h1 .count {
 
 .form-group {
   margin-bottom: 1rem;
-  position: relative;
+  position: relative; /* For autocomplete dropdown positioning */
 }
 
 .form-group label {
@@ -352,6 +368,8 @@ h1 .count {
 }
 
 /* ── Multiselect (campaign checkboxes) ─────────────────────────────────── */
+/* Scrollable checkbox list for selecting one or more campaigns.
+   A filter input is injected by JS when there are > 10 campaigns. */
 
 .multiselect {
   max-height: 200px;
@@ -391,6 +409,7 @@ h1 .count {
 }
 
 /* ── Autocomplete suggestions ──────────────────────────────────────────── */
+/* Dropdown that appears below Tags and Cities inputs as user types */
 
 .autocomplete-suggestions {
   position: absolute;
@@ -419,6 +438,7 @@ h1 .count {
 }
 
 /* ── Current image thumbnail ───────────────────────────────────────────── */
+/* Shown on the edit form when a record already has an image */
 
 .current-image {
   margin-bottom: 0.5rem;

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
 </head>
 <body>
+  <!-- ── Sticky header with nav ── -->
   <header>
     <div class="header-inner">
       <div class="header-left">
@@ -25,6 +26,7 @@
     </div>
   </header>
 
+  <!-- ── Flash messages (success/error banners after form actions) ── -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="flash-container">

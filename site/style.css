@@ -1,3 +1,17 @@
+/*
+ * Possible Dataviz Library — Public Site Styles
+ *
+ * Brand colours:
+ *   Deep purple (primary):  #321D49
+ *   Magenta (accent):       #BF0978
+ *   Font: Poppins (loaded from Google Fonts in index.html)
+ *
+ * Design notes:
+ *   - No rounded corners (deliberate brand choice)
+ *   - Cards use contain (not cover) so chart content is fully visible
+ *   - Mobile: search wraps to a second line below the logo
+ */
+
 /* ── Reset & base ──────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
@@ -14,6 +28,7 @@ body {
 }
 
 /* ── Header ────────────────────────────────────────────────────────────── */
+/* Sticky header with logo, subtitle, and search input */
 
 header {
   background: #321D49;
@@ -61,6 +76,7 @@ header {
 }
 
 /* ── Search (in header) ───────────────────────────────────────────────── */
+/* Full-width search input that stretches to fill remaining header space */
 
 .header-search {
   flex: 1;
@@ -94,6 +110,7 @@ header {
 
 
 /* ── Grid ──────────────────────────────────────────────────────────────── */
+/* Responsive card grid using CSS auto-fill — no JS layout needed */
 
 main {
   max-width: 1400px;
@@ -108,6 +125,7 @@ main {
 }
 
 /* ── Card ──────────────────────────────────────────────────────────────── */
+/* Each card = image thumbnail + headline + campaign + tags */
 
 .card {
   background: #fff;
@@ -122,13 +140,13 @@ main {
 .card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(50, 29, 73, 0.12);
-  border-bottom-color: #BF0978;
+  border-bottom-color: #BF0978; /* Magenta accent on hover */
 }
 
 .card-img {
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: contain;
+  object-fit: contain; /* Show the whole chart, don't crop */
   background: #faf9fb;
   padding: 0.5rem;
 }
@@ -155,6 +173,7 @@ main {
   font-weight: 600;
   margin-bottom: 0.4rem;
   line-height: 1.3;
+  /* Clamp to 3 lines with ellipsis */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -201,6 +220,7 @@ main {
 }
 
 /* ── Lightbox ──────────────────────────────────────────────────────────── */
+/* Full-screen overlay for viewing a chart at full size with metadata */
 
 .lightbox {
   position: fixed;
@@ -218,7 +238,7 @@ main {
 .lightbox-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(50, 29, 73, 0.88);
+  background: rgba(50, 29, 73, 0.88); /* Deep purple overlay */
 }
 
 .lightbox-content {
@@ -317,6 +337,11 @@ main {
 }
 
 /* ── Auth gate ─────────────────────────────────────────────────────────── */
+/* Simple client-side password gate.  The password is hashed with SHA-256
+   and compared in the browser.  This is NOT secure against a determined
+   attacker — it's a lightweight barrier to prevent casual access to what
+   is an internal tool.  Once authenticated, the flag is stored in
+   sessionStorage so refresh doesn't re-prompt. */
 
 body.locked header,
 body.locked main,
@@ -419,6 +444,8 @@ body.locked .lightbox {
 }
 
 /* ── Mobile ────────────────────────────────────────────────────────────── */
+/* On narrow screens: brand takes full width, search wraps below it,
+   grid columns shrink to 2-up */
 
 @media (max-width: 768px) {
   header {

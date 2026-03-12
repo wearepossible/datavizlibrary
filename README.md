@@ -1,2 +1,124 @@
-# datavizlibrary
-Frontend for Possible's dataviz library
+# Possible Dataviz Library
+
+A searchable archive of climate data visualisations for [Possible](https://www.wearepossible.org/), migrated from Airtable to a zero-cost static site.
+
+## What this is
+
+An internal tool for browsing, searching, and downloading ~400 data visualisations (PNG + SVG) produced across Possible's campaigns. The public-facing site is a single-page HTML/JS app with client-side search; images are hosted on Cloudflare R2. A local Flask admin tool lets you add, edit, and delete records without touching JSON by hand.
+
+## Architecture
+
+| Component | Service | Cost |
+|-----------|---------|------|
+| Static site | Netlify (free tier) | Free |
+| Images | Cloudflare R2 (free tier, EU jurisdiction) | Free |
+| Admin tool | Local Flask app (localhost:5001) | Free |
+| Data | JSON file in this repo (`site/data.json`) | Free |
+
+## Quick start
+
+### Prerequisites
+
+- Python 3.9+
+- A `.env` file with the required environment variables (see below)
+- System dependencies for text extraction: `tesseract` (OCR), `cairo` (SVG rasterisation)
+
+### Install Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### View the site locally
+
+```bash
+python site/serve.py
+# Open http://localhost:8080
+```
+
+### Run the admin tool
+
+```bash
+python admin/admin.py
+# Open http://localhost:5001
+```
+
+The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to commit and push, triggering a Netlify rebuild.
+
+## Project structure
+
+```
+project/
+├── CLAUDE.md               # AI assistant context (project history + decisions)
+├── README.md               # This file
+├── .env                    # API keys (gitignored)
+├── .gitignore
+├── requirements.txt        # Python deps
+├── scripts/                # One-time migration scripts (Phases 1 & 2)
+│   ├── export_airtable.py  # Export records + download images from Airtable
+│   ├── text_utils.py       # Shared text extraction (SVG XML + Tesseract OCR)
+│   ├── extract_text.py     # Batch text extraction into export.json
+│   ├── upload_to_r2.py     # Upload images to Cloudflare R2
+│   └── update_urls.py      # Generate site/data.json with public image URLs
+├── admin/                  # Local admin tool (Phase 3b)
+│   ├── admin.py            # Flask app: add/edit/delete records, upload to R2
+│   ├── static/
+│   │   ├── admin.css
+│   │   └── logo.png
+│   └── templates/
+│       ├── base.html       # Shared layout
+│       ├── list.html       # Record list with search + deploy button
+│       └── form.html       # Add/edit form with autocomplete
+├── site/                   # Public static site (Phase 3) — deployed to Netlify
+│   ├── index.html          # Single-page app with password gate
+│   ├── style.css           # Possible brand styles
+│   ├── app.js              # Search, grid rendering, lightbox
+│   ├── logo.png            # White Possible logo
+│   ├── serve.py            # Local dev server (python site/serve.py)
+│   └── data.json           # All record metadata (committed to repo)
+└── data/                   # Intermediate files (not committed)
+    ├── export.json         # Raw Airtable export
+    └── images/             # Downloaded images (uploaded to R2, not in repo)
+```
+
+## Migration pipeline
+
+The initial migration from Airtable was a four-step pipeline. These scripts have already been run and are kept for reference:
+
+1. **`export_airtable.py`** — Fetches all records via the Airtable API, downloads PNG/SVG attachments to `data/images/`, saves metadata to `data/export.json`.
+
+2. **`extract_text.py`** — Extracts readable text from each image (SVG XML parsing or Tesseract OCR) and adds an `image_text` field to each record for full-text search.
+
+3. **`upload_to_r2.py`** — Uploads all images to Cloudflare R2. Idempotent (skips files already in the bucket).
+
+4. **`update_urls.py`** — Converts bare filenames to full public URLs and writes the final `site/data.json`.
+
+## Environment variables
+
+Create a `.env` file in the project root:
+
+```env
+# Airtable (only needed for re-running the export)
+AIRTABLE_API_KEY=pat_xxxxx
+AIRTABLE_BASE_ID=appXXXXX
+AIRTABLE_TABLE_NAME=TableName
+
+# Cloudflare R2 (needed for the admin tool)
+R2_ACCOUNT_ID=xxxxx
+R2_ACCESS_KEY_ID=xxxxx
+R2_SECRET_ACCESS_KEY=xxxxx
+R2_BUCKET_NAME=possible-dataviz-library
+```
+
+## Brand
+
+- **Primary colour**: `#321D49` (deep purple)
+- **Accent colour**: `#BF0978` (magenta)
+- **Font**: Poppins (Google Fonts)
+- **Design**: No rounded corners (deliberate choice)
+
+## Deployment
+
+The `site/` directory is deployed to Netlify. Any push to the main branch triggers an automatic rebuild. The admin tool's "Deploy" button automates this: it runs `git add site/data.json && git commit && git push`.
+
+Images are served directly from Cloudflare R2 (`pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev`) and are not stored in the Git repo.
