@@ -38,6 +38,13 @@ async function init() {
 
   render(defaultRecords);
 
+  // Open lightbox if URL has a record hash (e.g. #travel-time-vs-congestion-rate)
+  const hash = location.hash.slice(1);
+  if (hash) {
+    const record = allRecords.find((r) => r.id === hash);
+    if (record) openLightbox(record);
+  }
+
   // Wire up event listeners
   document.getElementById("search").addEventListener("input", onSearch);
   document.addEventListener("keydown", onKeydown);
@@ -175,6 +182,9 @@ function openLightbox(record) {
   const details = document.getElementById("lightbox-details");
   const links = document.getElementById("lightbox-links");
 
+  // Update URL hash for sharing
+  history.replaceState(null, "", "#" + record.id);
+
   // Use PNG for display (better browser support); fall back to SVG
   img.src = record.png_urls?.[0] || record.svg_urls?.[0] || "";
   title.textContent = record.headline;
@@ -227,6 +237,7 @@ function openLightbox(record) {
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
   document.body.style.overflow = ""; // Restore scrolling
+  history.replaceState(null, "", location.pathname + location.search);
 }
 
 function onKeydown(e) {
