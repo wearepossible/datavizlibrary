@@ -2297,12 +2297,13 @@
     "id": "manchester-city-fc-took-a-private-jet-to-domestic-matches-10-times-last-season",
     "headline": "Manchester City FC took a private jet to domestic matches 10 times last season...",
     "status": "Done",
-    "campaign": "Frequent Flier Levy, Flight Free Football",
-    "relevant_cities": "",
+    "campaign": "Aviation, Flight Free Football, Frequent Flier Levy",
+    "relevant_cities": [],
     "tags": [
       "Isotype",
       "Aviation",
-      "Sports"
+      "Sports",
+      "Private jets"
     ],
     "png_files": [
       "manchester-city-fc-took-a-private-jet-to-domestic-matches-10-times-last-season.png"
@@ -4974,12 +4975,13 @@
     "id": "one-in-ten-uk-flights-is-now-a-private-jet",
     "headline": "One in ten UK flights is now a private jet",
     "status": "Done",
-    "campaign": "Frequent Flier Levy",
-    "relevant_cities": "",
+    "campaign": "Aviation, Frequent Flier Levy",
+    "relevant_cities": [],
     "tags": [
       "Aviation",
       "Frequent Flyer Programs",
-      "Isotype"
+      "Isotype",
+      "Private jets"
     ],
     "png_files": [
       "one-in-ten-uk-flights-is-now-a-private-jet.png"
@@ -10705,14 +10707,15 @@
     "id": "football-fans-dont-want-to-see-players-in-private-jets",
     "headline": "Football fans don\u2019t want to see players in private jets",
     "status": "Done",
-    "campaign": "Frequent Flier Levy, Flight Free Football",
-    "relevant_cities": "",
+    "campaign": "Aviation, Flight Free Football, Frequent Flier Levy",
+    "relevant_cities": [],
     "tags": [
       "Aviation",
       "Stacked Bar Chart",
       "Polling",
       "Donut Chart",
-      "Sports"
+      "Sports",
+      "Private jets"
     ],
     "png_files": [
       "football-fans-dont-want-to-see-players-in-private-jets.png"
