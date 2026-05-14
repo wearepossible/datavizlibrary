@@ -1,5 +1,65 @@
 [
   {
+    "id": "aviation-private-jet-restrictions-polling",
+    "headline": "Private Jet Restrictions Polling",
+    "status": "Done",
+    "campaign": "Aviation",
+    "relevant_cities": [],
+    "tags": [
+      "Private jets",
+      "Donut Chart",
+      "Holidays"
+    ],
+    "png_files": [
+      "aviation-private-jet-restrictions-polling.png"
+    ],
+    "svg_files": [
+      "aviation-private-jet-restrictions-polling.svg"
+    ],
+    "published_link": "",
+    "data_source": "Survation polling",
+    "data_link": "https://www.dropbox.com/scl/fo/keqa0jkke9q0kb2zb6kj3/ABCYtwc9e6HxJthb655wLds?rlkey=jbx2i39sm80rjabv1wvm6i49q&dl=0",
+    "last_updated": "2026-05-14",
+    "image_text": "The public agrees. 66% 19% 14% Don t know rather than cancelling standard passenger flights, even if this limits travel options for private jet passengers Private jet travel should, if necessary, be restricted miss their holidays rather than restricting private jet travel, even if this means standard passengers Some standard passenger flights should, if necessary, be cancelled Survation polled 2,018 UK adults, 29 Apr to 1 May 2026 Data:",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/aviation-private-jet-restrictions-polling.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/aviation-private-jet-restrictions-polling.svg"
+    ]
+  },
+  {
+    "id": "aviation-one-private-jet-flight-from-london-to-m\u00e1laga-uses-the-same-amount-of-fuel-as-six-families-of-four-taking-a-holiday-to-the-same-destination",
+    "headline": "One private jet flight from London to M\u00e1laga uses the same amount of fuel as six families of four taking a holiday to the same destination",
+    "status": "Done",
+    "campaign": "Aviation",
+    "relevant_cities": [],
+    "tags": [
+      "Private jets",
+      "Isotype",
+      "Holidays"
+    ],
+    "png_files": [
+      "aviation-one-private-jet-flight-from-london-to-m\u00e1laga-uses-the-same-amount-of-fuel-as-six-families-of-four-taking-a-holiday-to-the-same-destination.png"
+    ],
+    "svg_files": [
+      "aviation-one-private-jet-flight-from-london-to-m\u00e1laga-uses-the-same-amount-of-fuel-as-six-families-of-four-taking-a-holiday-to-the-same-destination.svg"
+    ],
+    "published_link": "",
+    "data_source": "Jetting Away With It",
+    "data_link": "https://drive.google.com/drive/u/2/folders/1xNLdQh95CSVLULWpXDxiB5VvVghPA908",
+    "last_updated": "2026-05-14",
+    "image_text": "Did you know? One private jet flight from London to M laga uses the same amount of fuel as Six families of four taking a holiday to the same destination.",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/aviation-one-private-jet-flight-from-london-to-m\u00e1laga-uses-the-same-amount-of-fuel-as-six-families-of-four-taking-a-holiday-to-the-same-destination.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/aviation-one-private-jet-flight-from-london-to-m\u00e1laga-uses-the-same-amount-of-fuel-as-six-families-of-four-taking-a-holiday-to-the-same-destination.svg"
+    ]
+  },
+  {
     "id": "travel-time-vs-congestion-rate",
     "headline": "Travel time vs congestion rate",
     "status": "Done",
