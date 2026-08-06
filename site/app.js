@@ -8,9 +8,13 @@
 // All records loaded from data.json (including those without images)
 let allRecords = [];
 
-// Subset shown by default: only records that have images, randomly shuffled
-// so the grid looks different on each visit.
+// Subset shown by default: only records that have images, in the order the
+// shuffle produced for this page load (see sortRecords).
 let defaultRecords = [];
+
+// Current sort order: "shuffle" (default), "newest" or "oldest".  Remembered
+// across visits so the choice sticks.
+let sortOrder = localStorage.getItem("dvl_sort") || "shuffle";
 
 // Fields searched when the user types a query.  image_text contains OCR /
 // SVG-extracted text from chart images, enabling full-text search across
@@ -33,10 +37,12 @@ async function init() {
 
   allRecords = data;
 
-  // Default grid shows only records with images, in random order
+  // Default grid shows only records with images.  Shuffle once per page
+  // load so switching sort back to random doesn't reshuffle underfoot.
   defaultRecords = shuffle(data.filter((r) => r.has_images));
 
-  render(defaultRecords);
+  document.getElementById("sort").value = sortOrder;
+  render(sortRecords(defaultRecords));
 
   // Open lightbox if URL has a record hash (e.g. #travel-time-vs-congestion-rate)
   const hash = location.hash.slice(1);
@@ -47,6 +53,7 @@ async function init() {
 
   // Wire up event listeners
   document.getElementById("search").addEventListener("input", onSearch);
+  document.getElementById("sort").addEventListener("change", onSort);
   document.addEventListener("keydown", onKeydown);
   document
     .querySelector(".lightbox-backdrop")
@@ -63,19 +70,20 @@ async function init() {
 // sorted so that headline matches rank highest, followed by campaign and
 // tag matches.  Exact phrase matches get a large bonus.
 
-function onSearch(e) {
-  const query = e.target.value.trim().toLowerCase();
+function onSearch() {
+  render(sortRecords(currentResults()));
+}
 
-  // Empty query → revert to the default randomised grid
-  if (!query) {
-    render(defaultRecords);
-    updateCount(defaultRecords.length, defaultRecords.length);
-    return;
-  }
+/** Records for the current query — the default grid when the box is empty. */
+function currentResults() {
+  const query = document.getElementById("search").value.trim().toLowerCase();
+  return query ? searchRecords(query) : defaultRecords;
+}
 
+function searchRecords(query) {
   const terms = query.split(/\s+/);
 
-  const scored = allRecords
+  return allRecords
     .map((record) => {
       let score = 0;
       const headline = (record.headline || "").toLowerCase();
@@ -113,8 +121,36 @@ function onSearch(e) {
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
     .map((item) => item.record);
+}
 
-  render(scored);
+// ── Sorting ─────────────────────────────────────────────────────────────
+//
+// The sort control applies to whatever is on screen — the default grid and
+// search results alike.  "Random order" leaves both as they are: the grid
+// keeps the shuffle from page load, and search results keep their relevancy
+// ranking.
+
+function onSort(e) {
+  sortOrder = e.target.value;
+  localStorage.setItem("dvl_sort", sortOrder);
+  render(sortRecords(currentResults()));
+}
+
+/**
+ * Order records by last_updated, newest or oldest first.
+ * Dates are ISO (YYYY-MM-DD), so they sort correctly as plain strings.
+ * Records with no date keep their existing order and go last either way —
+ * an undated record isn't old, we just don't know when it's from.
+ */
+function sortRecords(records) {
+  if (sortOrder !== "newest" && sortOrder !== "oldest") return records;
+
+  const direction = sortOrder === "newest" ? -1 : 1;
+  const dated = records.filter((r) => r.last_updated);
+  const undated = records.filter((r) => !r.last_updated);
+
+  dated.sort((a, b) => direction * a.last_updated.localeCompare(b.last_updated));
+  return [...dated, ...undated];
 }
 
 // ── Render grid ─────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+  <script src="{{ url_for('static', filename='admin.js') }}" defer></script>
 </head>
 <body>
   <!-- ── Sticky header with nav ── -->
@@ -21,6 +22,7 @@
       </div>
       <nav>
         <a href="{{ url_for('index') }}">Records</a>
+        <a href="{{ url_for('batch') }}">Batch Upload</a>
         <a href="{{ url_for('add') }}" class="btn-add">+ Add New</a>
       </nav>
     </div>

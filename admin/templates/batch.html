@@ -1,0 +1,167 @@
+{# Batch upload landing page — a drop zone for PNG/SVG files, plus a list of
+   unfinished batches to resume.
+
+   Files are uploaded in one POST to /batch/upload (with a progress bar), then
+   the server pairs them up by filename and sends us to the first item. #}
+
+{% extends "base.html" %}
+{% block title %}Batch Upload{% endblock %}
+
+{% block content %}
+<h1>Batch Upload</h1>
+
+<div class="dropzone" id="dropzone">
+  <input type="file" id="file-input" multiple accept=".png,.svg,image/png,image/svg+xml" hidden>
+  <div class="dropzone-inner">
+    <div class="dropzone-icon">↓</div>
+    <div class="dropzone-title">Drop PNGs and SVGs here</div>
+    <div class="dropzone-hint">
+      Whole folders work too. Files sharing a name (<code>chart.png</code> +
+      <code>chart.svg</code>) are treated as one record; anything unpaired
+      becomes its own. You'll be asked about each one in turn.
+    </div>
+    <button type="button" class="btn-secondary" id="browse-btn">Choose files</button>
+  </div>
+</div>
+
+<div class="upload-status" id="upload-status" hidden>
+  <div class="upload-label" id="upload-label">Uploading…</div>
+  <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+</div>
+
+{% if batches %}
+<h2 class="section-heading">Unfinished batches</h2>
+<div class="batch-list">
+  {% for b in batches %}
+  <div class="batch-row">
+    <div class="batch-info">
+      <div class="batch-title">{{ b.total }} item{{ '' if b.total == 1 else 's' }} — dropped {{ b.created }}</div>
+      <div class="batch-meta">
+        {{ b.saved }} saved · {{ b.skipped }} skipped · {{ b.pending }} left
+      </div>
+    </div>
+    <div class="batch-actions">
+      {% if b.pending %}
+        <a href="{{ url_for('batch_resume', batch_id=b.id) }}" class="btn-primary btn-small">Resume</a>
+      {% else %}
+        <a href="{{ url_for('batch_done', batch_id=b.id) }}" class="btn-secondary btn-small">Summary</a>
+      {% endif %}
+      <form method="post" action="{{ url_for('batch_discard', batch_id=b.id) }}">
+        <button type="submit" class="btn-link-danger"
+                onclick="return confirm('Discard the dropped files for this batch? Records already saved are kept.')">Discard</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<script>
+// ── Drop zone ──
+// Accepts both a plain file drop and a folder drop (folders are walked
+// recursively via the webkitGetAsEntry API, which all target browsers have).
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const statusBox = document.getElementById('upload-status');
+const statusLabel = document.getElementById('upload-label');
+const progressBar = document.getElementById('progress-bar');
+
+document.getElementById('browse-btn').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => upload(Array.from(fileInput.files)));
+
+['dragenter', 'dragover'].forEach(evt => {
+  dropzone.addEventListener(evt, e => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+});
+['dragleave', 'drop'].forEach(evt => {
+  dropzone.addEventListener(evt, e => {
+    e.preventDefault();
+    // dragleave fires when moving over child elements too — ignore those
+    if (evt === 'dragleave' && dropzone.contains(e.relatedTarget)) return;
+    dropzone.classList.remove('dragover');
+  });
+});
+
+dropzone.addEventListener('drop', async e => {
+  e.preventDefault();
+  const items = Array.from(e.dataTransfer.items || []);
+  const entries = items
+    .map(i => i.webkitGetAsEntry && i.webkitGetAsEntry())
+    .filter(Boolean);
+
+  if (entries.length) {
+    statusBox.hidden = false;
+    statusLabel.textContent = 'Reading files…';
+    progressBar.style.width = '0%';
+    const files = [];
+    for (const entry of entries) await walkEntry(entry, files);
+    upload(files);
+  } else {
+    upload(Array.from(e.dataTransfer.files || []));
+  }
+});
+
+// Recursively collect files from a dropped file/directory entry
+async function walkEntry(entry, out) {
+  if (entry.isFile) {
+    const file = await new Promise(res => entry.file(res, () => res(null)));
+    if (file) out.push(file);
+    return;
+  }
+  if (!entry.isDirectory) return;
+  const reader = entry.createReader();
+  // readEntries returns at most 100 entries per call — keep going until empty
+  while (true) {
+    const batch = await new Promise(res => reader.readEntries(res, () => res([])));
+    if (!batch.length) break;
+    for (const child of batch) await walkEntry(child, out);
+  }
+}
+
+function upload(files) {
+  const keep = files.filter(f => /\.(png|svg)$/i.test(f.name));
+  if (!keep.length) {
+    statusBox.hidden = false;
+    statusLabel.textContent = 'No PNG or SVG files in that drop.';
+    progressBar.style.width = '0%';
+    return;
+  }
+
+  const form = new FormData();
+  keep.forEach(f => form.append('files', f, f.name));
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '{{ url_for("batch_upload") }}');
+  statusBox.hidden = false;
+  statusLabel.textContent = `Uploading ${keep.length} file${keep.length === 1 ? '' : 's'}…`;
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    let data = {};
+    try { data = JSON.parse(xhr.responseText); } catch (err) {}
+    if (xhr.status === 200 && data.redirect) {
+      progressBar.style.width = '100%';
+      statusLabel.textContent = 'Sorting into records…';
+      window.location = data.redirect;
+    } else {
+      statusLabel.textContent = data.error || 'Upload failed.';
+      progressBar.style.width = '0%';
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    statusLabel.textContent = 'Upload failed — is the admin tool still running?';
+    progressBar.style.width = '0%';
+  });
+
+  xhr.send(form);
+}
+</script>
+{% endblock %}

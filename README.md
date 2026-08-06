@@ -6,6 +6,8 @@ A searchable archive of climate data visualisations for [Possible](https://www.w
 
 An internal tool for browsing, searching, and downloading ~400 data visualisations (PNG + SVG) produced across Possible's campaigns. The public-facing site is a single-page HTML/JS app with client-side search; images are hosted on Cloudflare R2. A local Flask admin tool lets you add, edit, and delete records without touching JSON by hand.
 
+The grid is in random order by default (so the library feels fresh on each visit); the sort control beside the search box switches to newest or oldest first by last-updated date, and that choice sticks between visits.
+
 ## Architecture
 
 | Component | Service | Cost |
@@ -38,12 +40,38 @@ python site/serve.py
 
 ### Run the admin tool
 
+**Without a terminal** — double-click either of these in Finder:
+
+- **`Dataviz Admin.command`** — starts the admin tool and opens it in your browser. Keep the Terminal window it opens; closing that window stops the tool. If it's already running, it just opens the tab.
+- **`Start Admin at Login.command`** — sets the admin tool to start automatically at every login and stay running, so http://localhost:5001 is just a bookmark and there's nothing to launch. Double-click it again to turn that off.
+
+Either one installs the Python packages for you on first run.
+
+**From a terminal**, if you prefer:
+
 ```bash
 python admin/admin.py
 # Open http://localhost:5001
+
+# With auto-reload on code changes (for development):
+DATAVIZ_DEBUG=1 python admin/admin.py
 ```
 
+The server only listens on `127.0.0.1`, so it's never reachable from other machines. When it's set to start at login, its output goes to `~/Library/Logs/datavizadmin.log`.
+
 The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to commit and push, triggering a Netlify rebuild.
+
+### Adding a lot of charts at once
+
+**Batch Upload** (in the admin header) takes a pile of files in one go:
+
+1. Drag PNGs and SVGs — or whole folders — onto the drop zone.
+2. Files sharing a filename (`chart.png` + `chart.svg`) become one record; anything unpaired becomes a record on its own. Non-image files are ignored.
+3. You're then asked about each one in turn, with the image on screen: headline (pre-filled from the filename, or one click to use the chart's own title), campaign, tags, and the rest. **Skip** moves on without saving, so anything you can't answer for can wait.
+4. Campaign and status carry over to the next item; tags, cities, data source, data link and date each get a "copy previous" button.
+5. A summary at the end lists what was saved and what wasn't, with a Deploy button.
+
+Dropped files are staged in `data/batches/` (gitignored) until you clear them, so a half-finished batch survives closing the tab — unfinished batches are listed on the Batch Upload page to resume. `Ctrl`/`⌘` + `Enter` saves the current item and moves on.
 
 ## Project structure
 
@@ -54,6 +82,8 @@ project/
 ├── .env                    # API keys (gitignored)
 ├── .gitignore
 ├── requirements.txt        # Python deps
+├── Dataviz Admin.command           # Double-click in Finder to start the admin tool
+├── Start Admin at Login.command    # Double-click to run it at login (toggle)
 ├── scripts/                # One-time migration scripts (Phases 1 & 2)
 │   ├── export_airtable.py  # Export records + download images from Airtable
 │   ├── text_utils.py       # Shared text extraction (SVG XML + Tesseract OCR)
@@ -61,14 +91,18 @@ project/
 │   ├── upload_to_r2.py     # Upload images to Cloudflare R2
 │   └── update_urls.py      # Generate site/data.json with public image URLs
 ├── admin/                  # Local admin tool (Phase 3b)
-│   ├── admin.py            # Flask app: add/edit/delete records, upload to R2
+│   ├── admin.py            # Flask app: add/edit/delete records, batch upload, upload to R2
 │   ├── static/
 │   │   ├── admin.css
+│   │   ├── admin.js        # Shared form behaviour (autocomplete, campaign filter)
 │   │   └── logo.png
 │   └── templates/
 │       ├── base.html       # Shared layout
 │       ├── list.html       # Record list with search + deploy button
-│       └── form.html       # Add/edit form with autocomplete
+│       ├── form.html       # Add/edit form with autocomplete
+│       ├── batch.html      # Batch upload drop zone
+│       ├── batch_item.html # One-at-a-time questions for each dropped file
+│       └── batch_done.html # Batch summary + deploy
 ├── site/                   # Public static site (Phase 3) — deployed to Netlify
 │   ├── index.html          # Single-page app with password gate
 │   ├── style.css           # Possible brand styles
@@ -78,7 +112,8 @@ project/
 │   └── data.json           # All record metadata (committed to repo)
 └── data/                   # Intermediate files (not committed)
     ├── export.json         # Raw Airtable export
-    └── images/             # Downloaded images (uploaded to R2, not in repo)
+    ├── images/             # Downloaded images (uploaded to R2, not in repo)
+    └── batches/            # Staged files for in-progress batch uploads
 ```
 
 ## Migration pipeline
