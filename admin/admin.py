@@ -938,8 +938,31 @@ def _get_cities():
 
 # ── Main ────────────────────────────────────────────────────────────────
 
+PORT = 5001
+URL = f"http://localhost:{PORT}"
+
 if __name__ == "__main__":
-    print(f"Admin tool starting...")
+    # Env vars rather than CLI flags, so the Finder launchers can set them:
+    #   DATAVIZ_OPEN_BROWSER=1  open a browser tab once the server is up
+    #                           ("Dataviz Admin.command" sets this)
+    #   DATAVIZ_DEBUG=1         auto-reload on code changes + the Werkzeug
+    #                           debugger.  Off by default: this can be left
+    #                           running all day via the login item, and an
+    #                           always-on debugger is not something to leave
+    #                           lying around.
+    debug = os.getenv("DATAVIZ_DEBUG") == "1"
+
+    # WERKZEUG_RUN_MAIN is set in the reloader's child process — checking it
+    # keeps the tab from opening twice when debug mode is on.
+    if os.getenv("DATAVIZ_OPEN_BROWSER") == "1" and not os.getenv("WERKZEUG_RUN_MAIN"):
+        import threading
+        import webbrowser
+
+        # Give the server a moment to bind the port before pointing a
+        # browser at it
+        threading.Timer(1.0, lambda: webbrowser.open(URL)).start()
+
+    print("Admin tool starting...")
     print(f"Data file: {DATA_JSON}")
-    print(f"Open http://localhost:5001")
-    app.run(debug=True, port=5001)
+    print(f"Open {URL}")
+    app.run(debug=debug, port=PORT)

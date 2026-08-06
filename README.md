@@ -40,10 +40,24 @@ python site/serve.py
 
 ### Run the admin tool
 
+**Without a terminal** — double-click either of these in Finder:
+
+- **`Dataviz Admin.command`** — starts the admin tool and opens it in your browser. Keep the Terminal window it opens; closing that window stops the tool. If it's already running, it just opens the tab.
+- **`Start Admin at Login.command`** — sets the admin tool to start automatically at every login and stay running, so http://localhost:5001 is just a bookmark and there's nothing to launch. Double-click it again to turn that off.
+
+Either one installs the Python packages for you on first run.
+
+**From a terminal**, if you prefer:
+
 ```bash
 python admin/admin.py
 # Open http://localhost:5001
+
+# With auto-reload on code changes (for development):
+DATAVIZ_DEBUG=1 python admin/admin.py
 ```
+
+The server only listens on `127.0.0.1`, so it's never reachable from other machines. When it's set to start at login, its output goes to `~/Library/Logs/datavizadmin.log`.
 
 The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to commit and push, triggering a Netlify rebuild.
 
@@ -68,6 +82,8 @@ project/
 ├── .env                    # API keys (gitignored)
 ├── .gitignore
 ├── requirements.txt        # Python deps
+├── Dataviz Admin.command           # Double-click in Finder to start the admin tool
+├── Start Admin at Login.command    # Double-click to run it at login (toggle)
 ├── scripts/                # One-time migration scripts (Phases 1 & 2)
 │   ├── export_airtable.py  # Export records + download images from Airtable
 │   ├── text_utils.py       # Shared text extraction (SVG XML + Tesseract OCR)

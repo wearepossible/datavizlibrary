@@ -50,6 +50,23 @@ All four phases of the migration are complete:
 - Text extraction from uploaded images (SVG XML or OCR)
 - One-click deploy (git commit + push to trigger Netlify rebuild)
 
+### Phase 3d: Finder launchers — DONE
+- The admin tool is macOS-local, and opening a terminal to start it was the main
+  friction in day-to-day use
+- `Dataviz Admin.command` — double-clickable: finds a Python (project venv, else
+  `python3`), installs missing deps, starts the server, opens the browser.
+  Detects an already-running instance and just opens the tab instead of failing
+  on a bound port
+- `Start Admin at Login.command` — double-clickable toggle that installs/removes
+  a LaunchAgent (`org.wearepossible.datavizadmin`) so the tool runs from login
+  and `localhost:5001` is a bookmark. Logs to `~/Library/Logs/datavizadmin.log`;
+  sets PATH explicitly so Tesseract is found in the minimal LaunchAgent env
+- `admin.py` reads two env vars: `DATAVIZ_OPEN_BROWSER=1` (open a tab on start)
+  and `DATAVIZ_DEBUG=1` (reloader + debugger)
+- **Debug mode is now off by default** — it used to be `debug=True`. With the
+  login item the server can be up all day, and leaving the Werkzeug debugger
+  exposed on it isn't worth it. Use `DATAVIZ_DEBUG=1` when working on admin.py
+
 ### Phase 3c: Batch upload — DONE
 - Drop many PNGs/SVGs (or folders) at `/batch`, answer questions about each in turn
 - Files are grouped into records by filename stem, case-insensitively — `chart.png` +
@@ -130,6 +147,8 @@ project/
 ├── .env                    # API keys (gitignored)
 ├── .gitignore              # Ignores .env, data/images/, __pycache__/
 ├── requirements.txt        # Python deps: requests, python-dotenv, pytesseract, Pillow, cairosvg, boto3, flask
+├── Dataviz Admin.command   # Finder launcher: starts admin.py + opens the browser
+├── Start Admin at Login.command  # Installs/removes a LaunchAgent for the admin tool
 ├── Possible_Logo_White.png # Source logo file
 ├── scripts/
 │   ├── export_airtable.py  # Phase 1: fetch records from Airtable + download images
