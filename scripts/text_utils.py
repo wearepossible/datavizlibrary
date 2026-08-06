@@ -30,11 +30,13 @@ if TESSERACT_PATH.exists():
     pytesseract.pytesseract.tesseract_cmd = str(TESSERACT_PATH)
 
 
-def extract_svg_text(svg_path):
-    """Extract text from SVG <text> and <tspan> elements.
+def svg_text_elements(svg_path):
+    """List the text of each <text>/<tspan> element in an SVG, in document order.
 
-    Returns the extracted text, or empty string if no text elements found
-    or the file can't be parsed.
+    Document order matters: the chart's title is almost always the first
+    text element, which the admin tool uses to suggest a headline.
+
+    Returns a list of strings (empty if the file can't be parsed).
     """
     try:
         tree = ET.parse(svg_path)
@@ -49,9 +51,18 @@ def extract_svg_text(svg_path):
                 t = elem.text.strip()
                 if t:
                     texts.append(t)
-        return " ".join(texts)
+        return texts
     except ET.ParseError:
-        return ""
+        return []
+
+
+def extract_svg_text(svg_path):
+    """Extract text from SVG <text> and <tspan> elements.
+
+    Returns the extracted text, or empty string if no text elements found
+    or the file can't be parsed.
+    """
+    return " ".join(svg_text_elements(svg_path))
 
 
 def svg_has_text_elements(svg_path):
@@ -116,8 +127,51 @@ def clean_text(raw_text):
     return text.strip()
 
 
+def extract_lines_for_record(record, image_dir):
+    """Extract text from a record's images as separate lines.
+
+    Same strategies as extract_text_for_record() below, but preserving the
+    boundaries between SVG <text> elements / OCR lines.  Callers wanting one
+    searchable blob should use extract_text_for_record(); the line structure
+    is what lets the admin tool guess a chart's title (which is the first
+    line of nearly every chart).
+
+    Returns a list of cleaned, non-empty lines.
+    """
+    image_dir = Path(image_dir)
+
+    def cleaned(raw_lines):
+        return [line for line in (clean_text(l) for l in raw_lines) if line]
+
+    # Strategy 1: SVG XML extraction — fast and accurate
+    for svg_file in record.get("svg_files", []):
+        svg_path = image_dir / svg_file
+        if svg_path.exists() and svg_has_text_elements(svg_path):
+            lines = cleaned(svg_text_elements(svg_path))
+            if lines:
+                return lines
+
+    # Strategy 2: PNG OCR via Tesseract
+    for png_file in record.get("png_files", []):
+        png_path = image_dir / png_file
+        if png_path.exists():
+            lines = cleaned(ocr_png(png_path).splitlines())
+            if lines:
+                return lines
+
+    # Strategy 3: rasterize SVG and OCR (for SVGs with text-as-paths)
+    for svg_file in record.get("svg_files", []):
+        svg_path = image_dir / svg_file
+        if svg_path.exists():
+            lines = cleaned(ocr_svg(svg_path).splitlines())
+            if lines:
+                return lines
+
+    return []
+
+
 def extract_text_for_record(record, image_dir):
-    """Extract text from a record's images.
+    """Extract text from a record's images as one searchable string.
 
     Tries three strategies in order of preference:
       1. SVG XML text extraction (fast, accurate)
@@ -126,30 +180,4 @@ def extract_text_for_record(record, image_dir):
 
     Returns the cleaned text or empty string if nothing could be extracted.
     """
-    image_dir = Path(image_dir)
-
-    # Strategy 1: SVG XML extraction — fast and accurate
-    for svg_file in record.get("svg_files", []):
-        svg_path = image_dir / svg_file
-        if svg_path.exists() and svg_has_text_elements(svg_path):
-            text = extract_svg_text(svg_path)
-            if text:
-                return clean_text(text)
-
-    # Strategy 2: PNG OCR via Tesseract
-    for png_file in record.get("png_files", []):
-        png_path = image_dir / png_file
-        if png_path.exists():
-            text = ocr_png(png_path)
-            if text:
-                return clean_text(text)
-
-    # Strategy 3: rasterize SVG and OCR (for SVGs with text-as-paths)
-    for svg_file in record.get("svg_files", []):
-        svg_path = image_dir / svg_file
-        if svg_path.exists():
-            text = ocr_svg(svg_path)
-            if text:
-                return clean_text(text)
-
-    return ""
+    return " ".join(extract_lines_for_record(record, image_dir))

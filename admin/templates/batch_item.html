@@ -1,0 +1,227 @@
+{# One step of the batch upload wizard: the dropped image(s) on the left, the
+   questions about them on the right.
+
+   Every field except Headline is optional, and Skip moves on without saving
+   anything.  Fields that tend to repeat across a batch (campaign, status,
+   data source, date) are carried over from the previously saved item; tags,
+   cities and the data link get a "copy previous" button instead, since those
+   are usually per-chart.
+
+   Extracted chart text is fetched in the background after render so a slow
+   OCR pass doesn't hold up the form. #}
+
+{% extends "base.html" %}
+{% block title %}Batch {{ index + 1 }}/{{ total }}{% endblock %}
+
+{% block content %}
+<div class="wizard-header">
+  <div>
+    <h1>Item {{ index + 1 }} <span class="count">of {{ total }}</span></h1>
+    <div class="wizard-filename">{{ item.stem }}</div>
+  </div>
+  <div class="wizard-progress">
+    <div class="progress-track">
+      <div class="progress-bar" style="width: {{ (done_count / total * 100)|round }}%"></div>
+    </div>
+    <div class="wizard-counts">{{ saved_count }} saved · {{ done_count - saved_count }} skipped</div>
+  </div>
+</div>
+
+{% if item.status != 'pending' %}
+<div class="wizard-note">
+  {% if item.status == 'saved' %}
+    Already saved as
+    <a href="{{ url_for('edit', record_id=item.record_id) }}">{{ item.headline }}</a>.
+    Filling this in again will create a second record.
+  {% else %}
+    You skipped this one. Fill it in below if you've changed your mind.
+  {% endif %}
+</div>
+{% elif duplicate %}
+<div class="wizard-note wizard-note-warn">
+  Looks like this may already be in the library as
+  <a href="{{ url_for('edit', record_id=duplicate.id) }}">{{ duplicate.headline }}</a>
+  — skip it unless you meant to add it twice.
+</div>
+{% endif %}
+
+<div class="wizard">
+  <!-- ── Left: the dropped files ── -->
+  <div class="wizard-preview">
+    {% set preview = (item.png_files or item.svg_files)[0] %}
+    <div class="preview-image">
+      <img src="{{ url_for('batch_file', batch_id=state.id, filename=preview) }}" alt="{{ item.stem }}">
+    </div>
+    <div class="preview-files">
+      {% for f in item.png_files %}
+        <a href="{{ url_for('batch_file', batch_id=state.id, filename=f) }}" target="_blank" class="file-chip">PNG · {{ f }}</a>
+      {% endfor %}
+      {% for f in item.svg_files %}
+        <a href="{{ url_for('batch_file', batch_id=state.id, filename=f) }}" target="_blank" class="file-chip">SVG · {{ f }}</a>
+      {% endfor %}
+    </div>
+    {% if not item.png_files or not item.svg_files %}
+      <div class="preview-warn">
+        No matching {{ 'PNG' if not item.png_files else 'SVG' }} was dropped for this one.
+      </div>
+    {% endif %}
+
+    <!-- Text pulled out of the chart itself — powers search on the public site -->
+    <div class="extracted" id="extracted">
+      <div class="extracted-label">Text found in the chart</div>
+      <button type="button" class="suggested-title" id="use-title-btn" hidden></button>
+      <div class="extracted-body" id="extracted-body">Reading…</div>
+    </div>
+  </div>
+
+  <!-- ── Right: the questions ── -->
+  <form method="post" class="record-form wizard-form" id="item-form">
+    <input type="hidden" name="image_text" id="image_text" value="">
+
+    <div class="form-group">
+      <label for="headline">Headline * <span class="hint">from the filename — edit it</span></label>
+      <input type="text" id="headline" name="headline" value="{{ suggested_headline }}" required autofocus>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Campaign
+          {% if prev.campaign %}<span class="hint">(carried over)</span>{% endif %}
+        </label>
+        <div class="multiselect" id="campaign-select">
+          {% for c in campaigns %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="campaign" value="{{ c }}"
+                   {{ 'checked' if c in prev.get('campaign', []) else '' }}>
+            {{ c }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="status">Status</label>
+        <input type="text" id="status" name="status" list="status-list" value="{{ prev.get('status', '') }}">
+        <datalist id="status-list">
+          {% for s in statuses %}<option value="{{ s }}">{% endfor %}
+        </datalist>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="tags">Tags <span class="hint">comma-separated</span>
+        {% if prev.get('tags') %}
+        <button type="button" class="btn-inline" data-copy-to="tags" data-copy-value="{{ prev.tags }}">copy previous</button>
+        {% endif %}
+      </label>
+      <input type="text" id="tags" name="tags">
+      <div class="autocomplete-suggestions" id="tag-suggestions"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="relevant_cities">Relevant Cities <span class="hint">comma-separated</span>
+        {% if prev.get('relevant_cities') %}
+        <button type="button" class="btn-inline" data-copy-to="relevant_cities" data-copy-value="{{ prev.relevant_cities }}">copy previous</button>
+        {% endif %}
+      </label>
+      <input type="text" id="relevant_cities" name="relevant_cities">
+      <div class="autocomplete-suggestions" id="city-suggestions"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="data_source">Data Source
+          {% if prev.get('data_source') %}
+          <button type="button" class="btn-inline" data-copy-to="data_source" data-copy-value="{{ prev.data_source }}">copy previous</button>
+          {% endif %}
+        </label>
+        <input type="text" id="data_source" name="data_source">
+      </div>
+      <div class="form-group">
+        <label for="data_link">Data Link
+          {% if prev.get('data_link') %}
+          <button type="button" class="btn-inline" data-copy-to="data_link" data-copy-value="{{ prev.data_link }}">copy previous</button>
+          {% endif %}
+        </label>
+        <input type="url" id="data_link" name="data_link">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="published_link">Published Link</label>
+        <input type="url" id="published_link" name="published_link">
+      </div>
+      <div class="form-group">
+        <label for="last_updated">Last Updated
+          {% if prev.get('last_updated') %}
+          <button type="button" class="btn-inline" data-copy-to="last_updated" data-copy-value="{{ prev.last_updated }}">copy previous</button>
+          {% endif %}
+        </label>
+        <input type="date" id="last_updated" name="last_updated">
+      </div>
+    </div>
+
+    <div class="form-actions wizard-actions">
+      <button type="submit" name="action" value="save" class="btn-primary">
+        Save &amp; next <span class="key-hint">⌘↵</span>
+      </button>
+      <button type="submit" name="action" value="skip" class="btn-secondary" formnovalidate>Skip</button>
+      <a href="{{ url_for('batch') }}" class="btn-link">Pause</a>
+    </div>
+
+    <div class="wizard-nav">
+      {% if prev_url %}<a href="{{ prev_url }}">← Previous</a>{% endif %}
+      <a href="{{ next_url }}">Next without deciding →</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  setupAutocomplete('tags', 'tag-suggestions', {{ all_tags|tojson }});
+  setupAutocomplete('relevant_cities', 'city-suggestions', {{ all_cities|tojson }});
+  setupCampaignFilter('campaign-select');
+
+  // "copy previous" buttons for the per-chart fields
+  document.querySelectorAll('[data-copy-to]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById(btn.dataset.copyTo).value = btn.dataset.copyValue;
+    });
+  });
+
+  // ── Extracted chart text ──
+  // Fetched after render because OCR on a PNG can take a few seconds; the
+  // hidden image_text field is submitted with the form so the server doesn't
+  // have to redo the work.
+  const body = document.getElementById('extracted-body');
+  const hidden = document.getElementById('image_text');
+  const titleBtn = document.getElementById('use-title-btn');
+
+  fetch('{{ url_for("batch_item_text_api", batch_id=state.id, index=index) }}')
+    .then(r => r.json())
+    .then(data => {
+      const text = (data.text || '').trim();
+      hidden.value = text;
+      body.textContent = text || 'No readable text found in this image.';
+      // The chart's own title usually beats the filename as a headline —
+      // offer it as one click rather than overwriting what's there.
+      if (data.title) {
+        titleBtn.textContent = '↑ Use as headline: “' + data.title + '”';
+        titleBtn.hidden = false;
+        titleBtn.addEventListener('click', function () {
+          document.getElementById('headline').value = data.title;
+        });
+      }
+    })
+    .catch(() => { body.textContent = 'Could not read text from this image.'; });
+
+  // Cmd/Ctrl+Enter saves and moves on
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      document.querySelector('button[value="save"]').click();
+    }
+  });
+});
+</script>
+{% endblock %}

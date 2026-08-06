@@ -503,7 +503,395 @@ h1 .count {
   background: #e0dae6;
 }
 
+/* ── Batch upload: drop zone ───────────────────────────────────────────── */
+/* Landing page for dropping a pile of PNGs/SVGs (batch.html) */
+
+.dropzone {
+  background: #fff;
+  border: 2px dashed #cfc6d8;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.dragover {
+  border-color: #BF0978;
+  background: #fdf2f8;
+}
+
+.dropzone-icon {
+  font-size: 2rem;
+  line-height: 1;
+  color: #BF0978;
+  margin-bottom: 0.5rem;
+}
+
+.dropzone-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dropzone-hint {
+  font-size: 0.8rem;
+  color: #777;
+  max-width: 460px;
+  margin: 0 auto 1.25rem;
+}
+
+.dropzone-hint code {
+  background: #f0ecf3;
+  padding: 0.05rem 0.25rem;
+  font-size: 0.75rem;
+}
+
+/* Upload progress (also reused by the wizard header) */
+
+.upload-status {
+  margin-top: 1rem;
+  background: #fff;
+  padding: 0.75rem 1rem;
+}
+
+.upload-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.progress-track {
+  height: 6px;
+  background: #e0dae6;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: #BF0978;
+  transition: width 0.2s;
+}
+
+/* ── Batch list (unfinished batches) ───────────────────────────────────── */
+
+.section-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #777;
+  margin: 2rem 0 0.75rem;
+}
+
+.batch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.batch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  padding: 0.75rem 1rem;
+}
+
+.batch-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.batch-meta {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-small {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.72rem;
+}
+
+.btn-link-danger {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #c62828;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btn-link-danger:hover {
+  text-decoration: underline;
+}
+
+/* Match the deploy/discard buttons to the height of the primary buttons
+   they sit beside on the batch summary */
+.btn-tall {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Batch wizard ──────────────────────────────────────────────────────── */
+/* One dropped item at a time: image on the left, questions on the right */
+
+.wizard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.wizard-header h1 {
+  margin-bottom: 0.15rem;
+}
+
+.wizard-filename {
+  font-size: 0.72rem;
+  color: #999;
+  word-break: break-all;
+}
+
+.wizard-progress {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.wizard-counts {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: 0.35rem;
+  text-align: right;
+}
+
+.wizard-note {
+  background: #fff;
+  border-left: 3px solid #321D49;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.78rem;
+  margin-bottom: 1rem;
+}
+
+.wizard-note-warn {
+  border-left-color: #BF0978;
+  background: #fdf2f8;
+}
+
+.wizard-note a {
+  color: #BF0978;
+  font-weight: 600;
+}
+
+.wizard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.wizard-preview {
+  position: sticky;
+  top: 4.5rem;
+}
+
+.preview-image {
+  background: #fff;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  max-height: 55vh;
+}
+
+.preview-image img {
+  max-width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+}
+
+.preview-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.file-chip {
+  background: #fff;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+  color: #666;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.file-chip:hover {
+  color: #BF0978;
+}
+
+.preview-warn {
+  margin-top: 2px;
+  padding: 0.4rem 0.6rem;
+  background: #fdf2f8;
+  color: #BF0978;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Text pulled out of the chart (SVG parsing or OCR) */
+
+.extracted {
+  margin-top: 0.75rem;
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.extracted-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #777;
+  margin-bottom: 0.35rem;
+}
+
+/* One-click "the chart calls itself this" headline suggestion */
+.suggested-title {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #fdf2f8;
+  border: none;
+  border-left: 3px solid #BF0978;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #BF0978;
+  cursor: pointer;
+}
+
+.suggested-title:hover {
+  background: #fce7f3;
+}
+
+.extracted-body {
+  font-size: 0.72rem;
+  color: #666;
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.45;
+}
+
+.btn-inline {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #BF0978;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.btn-inline:hover {
+  text-decoration: underline;
+}
+
+.wizard-form {
+  padding: 1.25rem;
+  max-width: none;
+}
+
+.wizard-form .multiselect {
+  max-height: 140px;
+}
+
+.wizard-actions {
+  margin-top: 1.25rem;
+  align-items: center;
+}
+
+.key-hint {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-left: 0.3rem;
+}
+
+.btn-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #777;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btn-link:hover {
+  color: #321D49;
+}
+
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.72rem;
+}
+
+.wizard-nav a {
+  color: #999;
+  text-decoration: none;
+}
+
+.wizard-nav a:hover {
+  color: #321D49;
+}
+
+/* ── Batch summary ─────────────────────────────────────────────────────── */
+
+.summary-counts {
+  display: flex;
+  gap: 2rem;
+  background: #fff;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.summary-count strong {
+  font-size: 1.4rem;
+  color: #321D49;
+  display: block;
+  line-height: 1.2;
+}
+
 /* ── Mobile ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .wizard { grid-template-columns: 1fr; }
+  .wizard-preview { position: static; }
+}
 
 @media (max-width: 600px) {
   header { padding: 0.75rem 1rem; }
@@ -512,4 +900,7 @@ h1 .count {
   .list-header { flex-direction: column; align-items: flex-start; }
   .list-actions { flex-direction: column; align-items: flex-start; }
   #live-search { width: 100%; }
+  .wizard-header { flex-direction: column; }
+  .wizard-progress { width: 100%; }
+  .batch-row { flex-direction: column; align-items: flex-start; }
 }

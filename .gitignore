@@ -1,5 +1,6 @@
 .env
 data/images/
+data/batches/
 .DS_Store
 __pycache__/
 *.pyc

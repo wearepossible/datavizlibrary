@@ -38,6 +38,9 @@ All four phases of the migration are complete:
 - Responsive: search wraps to second line on mobile
 - Lightbox with PNG/SVG download and metadata
 - Client-side password gate (SHA-256 hash, sessionStorage)
+- Sort control: random (default), newest first, oldest first — sorts on
+  `last_updated` and applies to search results as well as the default grid;
+  the choice is remembered in localStorage (`dvl_sort`)
 
 ### Phase 3b: Build admin tool — DONE
 - Local Flask app at `http://localhost:5001`
@@ -46,6 +49,24 @@ All four phases of the migration are complete:
 - Multi-select campaign checkboxes with filter
 - Text extraction from uploaded images (SVG XML or OCR)
 - One-click deploy (git commit + push to trigger Netlify rebuild)
+
+### Phase 3c: Batch upload — DONE
+- Drop many PNGs/SVGs (or folders) at `/batch`, answer questions about each in turn
+- Files are grouped into records by filename stem, case-insensitively — `chart.png` +
+  `chart.svg` become one record, unpaired files become records of their own
+- Dropped files are staged in `data/batches/<batch_id>/` (gitignored) with a
+  `batch.json` holding the grouping and progress; state is on disk, not in memory,
+  so a closed tab or Flask reload doesn't lose a half-finished batch
+- Per item: image preview, headline pre-filled from the filename (or one click to
+  use the chart's own title from the extracted text), all other fields optional,
+  and a Skip button
+- Campaign and status carry over to the next item; tags/cities/data source/data
+  link/date get "copy previous" buttons instead (deliberate — those vary per chart)
+- Likely duplicates are flagged (filename match, or filename slug matching a
+  record id) but never auto-skipped
+- Text extraction runs async after render and is cached in `batch.json`, so a slow
+  OCR pass never blocks the form
+- Abandoned staging folders are pruned after 7 days
 
 ### Phase 4: Netlify deployment — DONE
 - Git repo with site files + JSON data (images on R2, not in repo)
@@ -117,14 +138,18 @@ project/
 │   ├── upload_to_r2.py     # Phase 2: upload images to Cloudflare R2 (idempotent)
 │   └── update_urls.py      # Phase 2b: generate site/data.json with public R2 URLs
 ├── admin/
-│   ├── admin.py            # Local Flask admin tool (add/edit/delete/deploy)
+│   ├── admin.py            # Local Flask admin tool (add/edit/delete/batch/deploy)
 │   ├── static/
 │   │   ├── admin.css       # Admin interface styles
+│   │   ├── admin.js        # Shared form JS (autocomplete + campaign filter)
 │   │   └── logo.png        # Logo for admin header
 │   └── templates/
 │       ├── base.html       # Shared layout (header + flash messages)
 │       ├── list.html       # Record list with live search + deploy button
-│       └── form.html       # Add/edit form with autocomplete + image upload
+│       ├── form.html       # Add/edit form with autocomplete + image upload
+│       ├── batch.html      # Batch upload drop zone + unfinished batches
+│       ├── batch_item.html # One dropped item: preview + questions + skip
+│       └── batch_done.html # Batch summary + deploy button
 ├── site/
 │   ├── index.html          # Main browsing interface (password-gated)
 │   ├── style.css           # Public site styles (Possible brand)
@@ -154,3 +179,7 @@ The static site uses a lightweight client-side relevancy search:
 - The password gate on the public site is a SHA-256 client-side check — a lightweight barrier, not a security boundary
 - The admin tool is local-only (Flask dev server) — never deployed publicly
 - The default grid shuffles records randomly on each page load so the library feels fresh
+- The shuffle happens once per page load, so switching the sort control back to
+  "Random order" restores that page's order rather than reshuffling
+- 8 of 439 records have no `last_updated`; they sort to the end in both date
+  directions (unknown date ≠ old)

@@ -23,6 +23,13 @@
       </div>
       <div class="header-search">
         <input type="text" id="search" placeholder="Search headlines, campaigns, tags..." autofocus>
+        <!-- Sort order applies to the default grid and to search results.
+             The choice is remembered in localStorage. -->
+        <select id="sort" aria-label="Sort order">
+          <option value="shuffle">Random order</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
       </div>
     </div>
   </header>
@@ -102,6 +109,6 @@
   </script>
 
   <!-- Main application logic (search, grid rendering, lightbox) -->
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

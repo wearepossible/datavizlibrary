@@ -108,6 +108,36 @@ header {
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* Sort control — sits beside the search box, same treatment */
+
+#sort {
+  flex-shrink: 0;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 500;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#sort:hover,
+#sort:focus {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* The dropdown list itself renders in the OS palette, so give the options
+   readable colours rather than white-on-white */
+#sort option {
+  background: #321D49;
+  color: #fff;
+}
+
 
 /* ── Grid ──────────────────────────────────────────────────────────────── */
 /* Responsive card grid using CSS auto-fill — no JS layout needed */
@@ -472,6 +502,11 @@ body.locked .lightbox {
 
   .header-search {
     width: 100%;
+  }
+
+  #sort {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.75rem;
   }
 
   main {

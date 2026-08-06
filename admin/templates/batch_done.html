@@ -1,0 +1,77 @@
+{# End of a batch: what was saved, what was skipped, and a deploy button.
+
+   The dropped files stay on disk until "Clear dropped files" is used, so a
+   skipped item can still be revisited from the batch list. #}
+
+{% extends "base.html" %}
+{% block title %}Batch Complete{% endblock %}
+
+{% block content %}
+{% set saved = state['items']|selectattr('status', 'equalto', 'saved')|list %}
+{% set skipped = state['items']|selectattr('status', 'equalto', 'skipped')|list %}
+{% set pending = state['items']|selectattr('status', 'equalto', 'pending')|list %}
+
+<h1>Batch finished</h1>
+
+<div class="summary-counts">
+  <div class="summary-count"><strong>{{ saved|length }}</strong> saved</div>
+  <div class="summary-count"><strong>{{ skipped|length }}</strong> skipped</div>
+  {% if pending %}<div class="summary-count"><strong>{{ pending|length }}</strong> not looked at</div>{% endif %}
+</div>
+
+{% if saved %}
+<h2 class="section-heading">Added to the library</h2>
+<div class="record-list">
+  {% for item in saved %}
+  <div class="record-row-wrap">
+    <a href="{{ url_for('edit', record_id=item.record_id) }}" class="record-row">
+      <div class="record-info">
+        <div class="record-headline">{{ item.headline }}</div>
+        <div class="record-meta"><span>{{ item.stem }}</span></div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if skipped or pending %}
+<h2 class="section-heading">Not added</h2>
+<div class="record-list">
+  {% for item in state['items'] %}
+    {% if item.status != 'saved' %}
+    <div class="record-row-wrap">
+      <a href="{{ url_for('batch_item', batch_id=state.id, index=loop.index0) }}" class="record-row">
+        <div class="record-info">
+          <div class="record-headline">{{ item.stem }}</div>
+          <div class="record-meta"><span>{{ 'skipped' if item.status == 'skipped' else 'not looked at' }} — click to fill in</span></div>
+        </div>
+      </a>
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if state.ignored %}
+<div class="wizard-note">
+  Ignored {{ state.ignored|length }} non-image file{{ '' if state.ignored|length == 1 else 's' }}
+  in the drop ({{ state.ignored[:5]|join(', ') }}{{ '…' if state.ignored|length > 5 else '' }}).
+</div>
+{% endif %}
+
+<div class="form-actions">
+  {% if saved %}
+  <form method="post" action="{{ url_for('deploy') }}">
+    <button type="submit" class="btn-deploy btn-tall"
+            onclick="return confirm('Commit and push data.json to trigger deploy?')">Deploy to live site</button>
+  </form>
+  {% endif %}
+  <a href="{{ url_for('batch') }}" class="btn-secondary">New batch</a>
+  <form method="post" action="{{ url_for('batch_discard', batch_id=state.id) }}">
+    <input type="hidden" name="next" value="index">
+    <button type="submit" class="btn-link-danger btn-tall"
+            onclick="return confirm('Clear the dropped files for this batch? Saved records are kept.')">Clear dropped files</button>
+  </form>
+</div>
+{% endblock %}
