@@ -179,6 +179,25 @@ h1 .count {
   border-color: #321D49;
 }
 
+/* Sort control beside the filter box, matching its treatment */
+#sort-records {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  border: 2px solid #ddd;
+  border-radius: 0;
+  background: #fff;
+  color: #321D49;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+#sort-records:hover,
+#sort-records:focus {
+  border-color: #321D49;
+}
+
 /* Deploy button — green to distinguish from other actions */
 .btn-deploy {
   padding: 0.4rem 1rem;
@@ -379,19 +398,58 @@ h1 .count {
   background: #fff;
 }
 
+/* Filter/add row pinned above the campaign checkboxes */
+.multiselect-toolbar {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0.4rem;
+}
+
 .multiselect-filter {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.35rem 0.5rem;
   font-size: 0.8rem;
   font-family: inherit;
   border: 1px solid #e0dae6;
   border-radius: 0;
   outline: none;
-  margin-bottom: 0.4rem;
 }
 
 .multiselect-filter:focus {
   border-color: #321D49;
+}
+
+.multiselect-add {
+  flex-shrink: 0;
+  padding: 0.35rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f0ecf3;
+  color: #321D49;
+  border: 1px solid #e0dae6;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.multiselect-add:hover {
+  background: #e0dae6;
+}
+
+/* Marks a campaign added in this session — it only becomes a "real"
+   campaign once the record using it is saved */
+.new-flag {
+  display: inline-block;
+  padding: 0 0.3rem;
+  background: #BF0978;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
 }
 
 .checkbox-label {

@@ -10,6 +10,11 @@
   <h1>Records <span class="count">({{ records|length }})</span></h1>
   <div class="list-actions">
     <input type="text" id="live-search" placeholder="Filter records..." autofocus>
+    <select id="sort-records" aria-label="Sort order">
+      <option value="added">Recently added</option>
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
     <form method="post" action="{{ url_for('deploy') }}" class="deploy-form">
       <button type="submit" class="btn-deploy" onclick="return confirm('Commit and push data.json to trigger deploy?')">Deploy</button>
     </form>
@@ -18,8 +23,9 @@
 
 <div class="record-list" id="record-list">
   {% for r in records %}
-  {# data-searchable stores a lowercase string for the client-side filter JS #}
-  <div class="record-row-wrap" data-searchable="{{ r.headline|lower }} {{ r.campaign|lower }} {{ r.tags|join(' ')|lower }} {{ r.status|lower }}">
+  {# data-searchable stores a lowercase string for the client-side filter JS;
+     data-date drives the sort control (empty when the record has no date) #}
+  <div class="record-row-wrap" data-searchable="{{ r.headline|lower }} {{ r.campaign|lower }} {{ r.tags|join(' ')|lower }} {{ r.status|lower }}" data-date="{{ r.last_updated or '' }}">
     <a href="{{ url_for('edit', record_id=r.id) }}" class="record-row">
       <div class="record-thumb">
         {% if r.png_urls %}
@@ -59,5 +65,46 @@ document.getElementById('live-search').addEventListener('input', function() {
     row.style.display = match ? '' : 'none';
   });
 });
+
+// ── Sort control ──
+// Same last_updated ordering as the public site, but the default here is
+// the order records sit in data.json (newest additions first) rather than
+// random — a management list you're scanning for one record shouldn't
+// reshuffle itself.  Reorders the existing rows, so it composes with the
+// filter above.  Choice is remembered in localStorage.
+(function() {
+  const list = document.getElementById('record-list');
+  const sortSelect = document.getElementById('sort-records');
+  if (!list || !sortSelect) return;
+
+  // Captured once, so "Recently added" can always be restored
+  const rowsAsAdded = Array.from(list.querySelectorAll('.record-row-wrap'));
+
+  function applySort() {
+    const mode = sortSelect.value;
+    let ordered = rowsAsAdded;
+
+    if (mode === 'newest' || mode === 'oldest') {
+      const direction = mode === 'newest' ? -1 : 1;
+      // Records with no date keep their order and go last either way
+      const dated = rowsAsAdded.filter(function(r) { return r.dataset.date; });
+      const undated = rowsAsAdded.filter(function(r) { return !r.dataset.date; });
+      dated.sort(function(a, b) {
+        return direction * a.dataset.date.localeCompare(b.dataset.date);
+      });
+      ordered = dated.concat(undated);
+    }
+
+    ordered.forEach(function(row) { list.appendChild(row); });
+  }
+
+  sortSelect.value = localStorage.getItem('dvl_admin_sort') || 'added';
+  applySort();
+
+  sortSelect.addEventListener('change', function() {
+    localStorage.setItem('dvl_admin_sort', this.value);
+    applySort();
+  });
+})();
 </script>
 {% endblock %}
