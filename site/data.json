@@ -1,5 +1,41 @@
 [
   {
+    "id": "sebert-road-infographic",
+    "headline": "Sebert Road Infographic",
+    "status": "Done",
+    "campaign": "",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Infographic",
+      "Kerbside Greening",
+      "Parklets",
+      "BAN",
+      "Pie Chart",
+      "Isotype",
+      "Quote"
+    ],
+    "png_files": [
+      "sebert-road-infographic.png"
+    ],
+    "svg_files": [
+      "sebert-road-infographic.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-08-06",
+    "image_text": "SEBERT ROAD E7 Sebert Road is dominated by parked cars, leaving little space for shade, greenery, or people. As local residents, we want more room for trees to make Sebert Road cooler, calmer, and safer for everyone, especially children. As our summers get hotter, it isn't fair that those walking, cycling, and wheeling are left to struggle for space and shade. Public space should work for the whole community, not just vehicle storage. Our street should be a place for people, not just cars. Here s why greening Sebert Road is worth it. Sebert Road is +3.93 C hotter than it should be, due to the urban heat island effect Sebert Road ranks in the top 40% of London neighbourhoods for climate flood vulnerability About half of residents are car-free 49.6% don t own a car or van 35 C days are already 2-3x more likely than in a world without climate change Residents want action With cars driving at 40 miles an hour and huge deep puddles, it's a bit of an assault course just to get to school. The Sebert Road area has just 24% tree canopy coverage wearepossible.org/sebertroad For more information, visit",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/sebert-road-infographic.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/sebert-road-infographic.svg"
+    ]
+  },
+  {
     "id": "aviation-private-jet-restrictions-polling",
     "headline": "Private Jet Restrictions Polling",
     "status": "Done",
