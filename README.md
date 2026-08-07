@@ -61,6 +61,8 @@ The server only listens on `127.0.0.1`, so it's never reachable from other machi
 
 The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to commit and push, triggering a Netlify rebuild.
 
+The campaign list on the add/edit form only contains campaigns already in use. **To add a new one**, type its name in the box above the checkboxes and press Enter (or click **+ Add**) — it appears ticked at the top of the list, marked `NEW`, and becomes a normal campaign once you save the record. Typing a name that already exists just ticks it instead of duplicating it.
+
 ### Adding a lot of charts at once
 
 **Batch Upload** (in the admin header) takes a pile of files in one go:

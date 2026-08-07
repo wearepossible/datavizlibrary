@@ -28,7 +28,7 @@
   <div class="form-row">
     <!-- Campaign: multi-select checkboxes populated from existing records -->
     <div class="form-group">
-      <label>Campaign <span class="hint">(select one or more)</span></label>
+      <label>Campaign <span class="hint">select one or more, or type a new name and press Enter</span></label>
       <div class="multiselect" id="campaign-select">
         {% set current_campaigns = record.campaign.split(', ') if record and record.campaign else [] %}
         {% for c in campaigns %}
@@ -126,7 +126,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   setupAutocomplete('tags', 'tag-suggestions', {{ all_tags|tojson }});
   setupAutocomplete('relevant_cities', 'city-suggestions', {{ all_cities|tojson }});
-  setupCampaignFilter('campaign-select');
+  setupCampaignSelect('campaign-select');
 });
 </script>
 {% endblock %}

@@ -46,7 +46,14 @@ All four phases of the migration are complete:
 - Local Flask app at `http://localhost:5001`
 - Add/edit/delete records with image upload to R2
 - Autocomplete for tags and cities from existing records
-- Multi-select campaign checkboxes with filter
+- Multi-select campaign checkboxes with a combined filter/add box — the list is
+  built from campaigns already in use, so typing a new name and pressing Enter
+  (or clicking Add) is the only way to introduce one. Enter is intercepted
+  there: as a plain text input inside the form it used to submit the record,
+  which is what happened to anyone who typed a new campaign name and hit Enter
+- Records list has the same date sort as the public site, but defaults to
+  data.json order ("Recently added") rather than random; remembered in
+  localStorage (`dvl_admin_sort`)
 - Text extraction from uploaded images (SVG XML or OCR)
 - One-click deploy (git commit + push to trigger Netlify rebuild)
 
