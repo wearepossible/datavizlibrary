@@ -64,6 +64,11 @@
       <div class="preview-warn">
         No matching {{ 'PNG' if not item.png_files else 'SVG' }} was dropped for this one.
       </div>
+    {% elif item.paired_by_name %}
+      <div class="preview-note">
+        Paired on name — these filenames aren't identical (an export suffix
+        like @2x). Skip if they aren't the same chart.
+      </div>
     {% endif %}
 
     <!-- Text pulled out of the chart itself — powers search on the public site -->
@@ -203,7 +208,15 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(data => {
       const text = (data.text || '').trim();
       hidden.value = text;
-      body.textContent = text || 'No readable text found in this image.';
+      if (data.note) {
+        // Extraction couldn't run at all (a missing OCR tool) — saying "no
+        // text found" here would blame the chart for the machine's problem.
+        body.textContent = data.note;
+        body.classList.add('extracted-warn');
+      } else {
+        body.classList.remove('extracted-warn');
+        body.textContent = text || 'No readable text found in this image.';
+      }
       // The chart's own title usually beats the filename as a headline —
       // offer it as one click rather than overwriting what's there.
       if (data.title) {

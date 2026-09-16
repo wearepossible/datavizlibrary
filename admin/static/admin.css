@@ -811,6 +811,16 @@ h1 .count {
   font-weight: 500;
 }
 
+/* Quieter than .preview-warn: something to glance at, not to act on */
+.preview-note {
+  margin-top: 2px;
+  padding: 0.4rem 0.6rem;
+  background: #f4f1f7;
+  color: #321D49;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
 /* Text pulled out of the chart (SVG parsing or OCR) */
 
 .extracted {
@@ -855,6 +865,12 @@ h1 .count {
   max-height: 120px;
   overflow-y: auto;
   line-height: 1.45;
+}
+
+/* Shown when text extraction couldn't run, rather than found nothing */
+.extracted-body.extracted-warn {
+  color: #BF0978;
+  font-weight: 500;
 }
 
 .btn-inline {

@@ -6,7 +6,8 @@ managing the dataviz archive.  Features:
   - List/search all records
   - Add new records with image upload (PNG + SVG)
   - Batch upload: drop a pile of PNGs/SVGs, then answer questions about each
-    one in turn (files are paired up by filename)
+    one in turn (files are paired up by filename, allowing for export
+    suffixes such as `chart.svg` + `chart@2x.png`)
   - Edit existing records and replace images
   - Delete records (removes images from R2 too)
   - One-click deploy (git commit + push to trigger Netlify rebuild)
@@ -51,7 +52,11 @@ from werkzeug.utils import secure_filename
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.text_utils import extract_lines_for_record, extract_text_for_record
+from scripts.text_utils import (
+    extract_lines_for_record,
+    extract_text_for_record,
+    extraction_unavailable_reason,
+)
 
 # ── Config ──────────────────────────────────────────────────────────────
 
@@ -76,6 +81,12 @@ BATCH_ROOT = PROJECT_ROOT / "data" / "batches"
 BATCH_EXTENSIONS = {".png", ".svg"}
 # Abandoned batches are cleaned up automatically after this many days
 BATCH_MAX_AGE_DAYS = 7
+# Guards on pairing a PNG with an SVG whose filename isn't identical — see
+# stems_look_like_one_chart().  A stem shorter than this is too generic to
+# pair on; more than this many extra characters is a different chart, not an
+# export suffix.
+MIN_PAIR_STEM_CHARS = 6
+MAX_PAIR_EXTRA_CHARS = 8
 
 app = Flask(__name__)
 # Random secret key — fine for a local-only app, regenerated each launch
@@ -185,21 +196,33 @@ def extract_lines_from_paths(png_paths, svg_paths):
     Copies the files into a temp directory and delegates to the shared
     text_utils extraction (SVG XML parsing, then OCR).  Accepts lists of
     paths; SVGs are preferred as they extract fastest.
+
+    Returns (lines, reason).  `reason` is empty when extraction worked; when
+    it came back empty because a tool is missing (Tesseract, cairosvg) it
+    holds a message to show the user, so "nothing to read" and "nothing can
+    read it" aren't reported as the same thing.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         record = _stage_images(tmpdir, png_paths, svg_paths)
-        return extract_lines_for_record(record, tmpdir)
+        lines = extract_lines_for_record(record, tmpdir)
+        reason = "" if lines else extraction_unavailable_reason(record, tmpdir)
+        return lines, reason
 
 
 def extract_text_from_paths(png_paths, svg_paths):
-    """Extract searchable text from local image files as one string."""
+    """Extract searchable text from local image files as (text, reason)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         record = _stage_images(tmpdir, png_paths, svg_paths)
-        return extract_text_for_record(record, tmpdir)
+        text = extract_text_for_record(record, tmpdir)
+        reason = "" if text else extraction_unavailable_reason(record, tmpdir)
+        return text, reason
 
 
 def extract_text_from_uploads(png_path, svg_path):
-    """Extract searchable text from a single uploaded PNG and/or SVG."""
+    """Extract searchable text from a single uploaded PNG and/or SVG.
+
+    Returns (text, reason) — see extract_lines_from_paths().
+    """
     return extract_text_from_paths([png_path], [svg_path])
 
 
@@ -319,13 +342,93 @@ def prune_old_batches():
             shutil.rmtree(d, ignore_errors=True)
 
 
+# A retina/scale suffix describes the file, not the chart: "chart@2x",
+# "chart_3x".  A separator is required before the digits, so a name that just
+# happens to end that way (e.g. "co2x") keeps its last word.
+EXPORT_SUFFIX_RE = re.compile(r"[-_@\s]+\d+x$", re.I)
+
+
 def humanize_filename(stem):
     """Turn a filename stem into a plausible headline.
 
     'co2-emissions_by-country-2024' → 'Co2 Emissions By Country 2024'
+    'co2-emissions@2x'              → 'Co2 Emissions'
     """
-    words = re.split(r"[-_\s]+", stem.strip())
+    words = re.split(r"[-_\s]+", EXPORT_SUFFIX_RE.sub("", stem.strip()))
     return " ".join(w[:1].upper() + w[1:] for w in words if w)
+
+
+def normalise_stem(stem):
+    """Reduce a filename stem to its bare letters and digits, for comparison.
+
+    Lowercases and drops separators and punctuation, so that the same chart
+    named 'Car Free Cities', 'car-free-cities' and 'car_free_cities' all
+    compare equal.
+    """
+    return re.sub(r"[^a-z0-9]+", "", stem.lower())
+
+
+def stems_look_like_one_chart(a, b):
+    """True if two normalised stems look like one chart exported twice.
+
+    A chart's PNG often carries a suffix its SVG doesn't — `chart.svg` next
+    to `chart@2x.png` — so names are matched by containment rather than
+    equality.  Two guards stop that pulling unrelated charts together:
+      - the shorter stem must be specific enough to be worth matching on
+      - what is left over must look like an export suffix rather than more
+        words, so 'ev-sales' doesn't swallow 'ev-sales-by-country'
+    """
+    shorter, longer = sorted((a, b), key=len)
+    if len(shorter) < MIN_PAIR_STEM_CHARS:
+        return False
+    if len(longer) - len(shorter) > MAX_PAIR_EXTRA_CHARS:
+        return False
+    return shorter in longer
+
+
+def pair_groups_by_name(groups):
+    """Merge PNG-only and SVG-only groups that name the same chart.
+
+    Runs after files have been grouped by identical filename, and only
+    considers groups still missing their other half — so a pair that already
+    matched exactly is never broken up or added to.
+
+    Where a PNG could join more than one SVG, the longest (most specific)
+    stem wins; an exact tie is left alone, since attaching a chart's image to
+    the wrong record is worse than leaving it as its own item.
+
+    Mutates and returns `groups`.
+    """
+    png_only = [k for k, g in groups.items() if g["png_files"] and not g["svg_files"]]
+    svg_only = [k for k, g in groups.items() if g["svg_files"] and not g["png_files"]]
+    if not png_only or not svg_only:
+        return groups
+
+    merges = {}  # PNG-only key -> the SVG-only key it joins
+    for png_key in png_only:
+        matches = sorted(
+            (k for k in svg_only if stems_look_like_one_chart(png_key, k)),
+            key=len,
+            reverse=True,
+        )
+        if not matches:
+            continue
+        if len(matches) > 1 and len(matches[0]) == len(matches[1]):
+            continue  # equally plausible candidates — don't guess
+        merges[png_key] = matches[0]
+
+    for png_key, svg_key in merges.items():
+        png_group = groups.pop(png_key)
+        svg_group = groups[svg_key]
+        svg_group["png_files"].extend(png_group["png_files"])
+        # Flagged so the form can say the pairing wasn't an exact name match
+        svg_group["paired_by_name"] = True
+        # Keep the shorter name: exporters add suffixes rather than remove
+        # them, so the shorter stem is the chart's own name.
+        if len(png_group["stem"]) < len(svg_group["stem"]):
+            svg_group["stem"] = png_group["stem"]
+
+    return groups
 
 
 def batch_item_paths(state, item):
@@ -364,14 +467,25 @@ def batch_item_analysis(state, item):
 
     Extraction can be slow (OCR), so both are worked out in one pass and
     stored in batch.json — revisiting an item never re-runs it.
+
+    Returns (text, title, reason).  A run that found nothing because the
+    machine is missing a tool is deliberately not cached: it reports the
+    reason instead, and tries again next time, so installing the tool is
+    enough to fix an in-progress batch.
     """
-    if item.get("image_text") is None:
-        png_paths, svg_paths = batch_item_paths(state, item)
-        lines = extract_lines_from_paths(png_paths, svg_paths)
-        item["image_text"] = " ".join(lines)
-        item["suggested_title"] = pick_chart_title(lines)
-        save_batch(state)
-    return item["image_text"], item.get("suggested_title", "")
+    if item.get("extracted") or item.get("image_text"):
+        return item.get("image_text") or "", item.get("suggested_title", ""), ""
+
+    png_paths, svg_paths = batch_item_paths(state, item)
+    lines, reason = extract_lines_from_paths(png_paths, svg_paths)
+    if reason:
+        return "", "", reason
+
+    item["image_text"] = " ".join(lines)
+    item["suggested_title"] = pick_chart_title(lines)
+    item["extracted"] = True
+    save_batch(state)
+    return item["image_text"], item["suggested_title"], ""
 
 
 def find_possible_duplicate(records, item):
@@ -467,7 +581,7 @@ def add():
         svg_urls.append(url)
 
     # Extract searchable text from the uploaded images (for full-text search)
-    image_text = extract_text_from_uploads(png_tmp_path, svg_tmp_path)
+    image_text, text_reason = extract_text_from_uploads(png_tmp_path, svg_tmp_path)
 
     # Clean up temp files now that upload + text extraction are done
     for p in [png_tmp_path, svg_tmp_path]:
@@ -483,6 +597,10 @@ def add():
     records.insert(0, record)
     save_data(records)
     flash(f'Added "{headline}"', "success")
+    # Saved either way — but say so when the chart's text is missing from
+    # search because of the machine rather than the image.
+    if text_reason:
+        flash(f"Couldn't read the chart's text: {text_reason}", "error")
     return redirect(url_for("index"))
 
 
@@ -539,8 +657,9 @@ def edit(record_id):
         record["svg_urls"] = [url]
 
     # Re-extract text if new images were uploaded
+    text_reason = ""
     if png_tmp_path or svg_tmp_path:
-        image_text = extract_text_from_uploads(
+        image_text, text_reason = extract_text_from_uploads(
             png_tmp_path or None,
             svg_tmp_path or None,
         )
@@ -556,6 +675,8 @@ def edit(record_id):
 
     save_data(records)
     flash(f'Updated "{record["headline"]}"', "success")
+    if text_reason:
+        flash(f"Couldn't read the chart's text: {text_reason}", "error")
     return redirect(url_for("index"))
 
 
@@ -602,9 +723,13 @@ def batch():
 def batch_upload():
     """Receive dropped files, group them into items, and start a batch.
 
-    Files are grouped by filename stem (case-insensitive), so `chart.png` and
-    `chart.svg` become one item.  Anything unpaired becomes an item on its
-    own.  Returns JSON with the URL of the first item.
+    Files are grouped by filename stem (ignoring case, separators and
+    punctuation), so `chart.png` and `chart.svg` become one item.  Leftovers
+    are then paired by containment, which catches the common case of a PNG
+    exported with a suffix its SVG doesn't have (`chart.svg` + `chart@2x.png`).
+    Anything still unpaired becomes an item on its own.
+
+    Returns JSON with the URL of the first item.
     """
     files = [f for f in request.files.getlist("files") if f and f.filename]
     if not files:
@@ -635,9 +760,13 @@ def batch_upload():
             counter += 1
         f.save(str(dest))
 
-        key = Path(safe).stem.lower()
+        # Group on the original filename, not the sanitised one:
+        # secure_filename() strips the very characters that mark an export
+        # suffix (@, spaces), and the sanitised name is only needed on disk.
+        stem = Path(original).stem
+        key = normalise_stem(stem) or Path(safe).stem.lower()
         group = groups.setdefault(key, {
-            "stem": Path(original).stem,
+            "stem": stem,
             "png_files": [],
             "svg_files": [],
         })
@@ -647,13 +776,16 @@ def batch_upload():
         shutil.rmtree(d, ignore_errors=True)
         return jsonify({"error": "None of those files were PNGs or SVGs."}), 400
 
+    pair_groups_by_name(groups)
+
     items = []
     for key in sorted(groups):
         item = groups[key]
         item["status"] = "pending"      # pending | saved | skipped
         item["record_id"] = None
         item["headline"] = None
-        item["image_text"] = None       # filled in lazily by batch_item_text()
+        item["image_text"] = None       # filled in lazily by batch_item_analysis()
+        item["extracted"] = False       # set once extraction has actually run
         items.append(item)
 
     state = {
@@ -733,7 +865,7 @@ def batch_item(batch_id, index):
         # extracting now if that request hadn't finished before submit.
         image_text = request.form.get("image_text", "").strip()
         if not image_text:
-            image_text, _ = batch_item_analysis(state, item)
+            image_text, _, _ = batch_item_analysis(state, item)
 
         records.insert(0, record_from_form(
             request.form, slug, campaign,
@@ -786,12 +918,15 @@ def batch_item_text_api(batch_id, index):
 
     Called by the form after it renders, so a slow OCR pass doesn't hold up
     the page.  The result is cached in batch.json.
+
+    `note` is set when nothing could be read because a tool is missing, so
+    the form can show that instead of "no text in this image".
     """
     state = load_batch(batch_id)
     if not state or not 0 <= index < len(state["items"]):
-        return jsonify({"text": "", "title": ""}), 404
-    text, title = batch_item_analysis(state, state["items"][index])
-    return jsonify({"text": text, "title": title})
+        return jsonify({"text": "", "title": "", "note": ""}), 404
+    text, title, note = batch_item_analysis(state, state["items"][index])
+    return jsonify({"text": text, "title": title, "note": note})
 
 
 @app.route("/batch/<batch_id>/file/<path:filename>")
