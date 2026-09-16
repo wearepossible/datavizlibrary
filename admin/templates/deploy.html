@@ -1,0 +1,71 @@
+{# Deploy progress.
+
+   A deploy reads the text out of any chart that doesn't have it yet, then
+   commits and pushes data.json.  The reading is the slow part — seconds of
+   OCR per image that has no SVG — so it runs in a background thread and this
+   page polls /deploy/status until it finishes. #}
+
+{% extends "base.html" %}
+{% block title %}Deploying{% endblock %}
+
+{% block content %}
+<div class="deploy-page">
+  <h1 id="deploy-heading">Deploying…</h1>
+
+  <div class="deploy-status" id="deploy-status">
+    <div class="deploy-step" id="deploy-step">{{ state.step or 'Starting' }}</div>
+    <div class="progress-track"><div class="progress-bar" id="deploy-bar"></div></div>
+    <div class="deploy-count" id="deploy-count"></div>
+  </div>
+
+  <div class="deploy-message" id="deploy-message" hidden></div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('index') }}" class="btn-secondary">Back to records</a>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const heading = document.getElementById('deploy-heading');
+  const status = document.getElementById('deploy-status');
+  const step = document.getElementById('deploy-step');
+  const bar = document.getElementById('deploy-bar');
+  const count = document.getElementById('deploy-count');
+  const message = document.getElementById('deploy-message');
+
+  function render(state) {
+    step.textContent = state.step || '';
+    // The count is only meaningful while working through a list of charts
+    if (state.total) {
+      count.textContent = state.done + ' of ' + state.total;
+      bar.style.width = (state.done / state.total * 100) + '%';
+    } else {
+      count.textContent = '';
+      bar.style.width = state.status === 'running' ? '100%' : '0';
+    }
+
+    if (state.status === 'running') return true;
+
+    // Finished, one way or the other
+    heading.textContent = state.status === 'error' ? 'Deploy failed' : 'Done';
+    status.hidden = true;
+    message.textContent = state.message || '';
+    message.classList.toggle('deploy-message-error', state.status === 'error');
+    message.hidden = !state.message;
+    return false;
+  }
+
+  function poll() {
+    fetch('{{ url_for("deploy_status") }}')
+      .then(r => r.json())
+      .then(state => { if (render(state)) setTimeout(poll, 1000); })
+      // A dropped request isn't the end of the deploy — it runs server side,
+      // so keep asking.
+      .catch(() => setTimeout(poll, 2000));
+  }
+
+  poll();
+});
+</script>
+{% endblock %}

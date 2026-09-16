@@ -54,8 +54,8 @@ All four phases of the migration are complete:
 - Records list has the same date sort as the public site, but defaults to
   data.json order ("Recently added") rather than random; remembered in
   localStorage (`dvl_admin_sort`)
-- Text extraction from uploaded images (SVG XML or OCR)
-- One-click deploy (git commit + push to trigger Netlify rebuild)
+- One-click deploy: reads the text out of any chart still missing it, then
+  commits + pushes to trigger a Netlify rebuild
 
 ### Phase 3d: Finder launchers — DONE
 - The admin tool is macOS-local, and opening a terminal to start it was the main
@@ -98,12 +98,33 @@ All four phases of the migration are complete:
 - **No text extraction in the batch flow** — it was tried (a "Text found in the
   chart" panel, extracted async and cached in `batch.json`) and removed: OCR costs
   seconds per image, which is the entire time budget of working through a batch,
-  and the wait was felt on every item. Batch records are saved with an empty
-  `image_text`, so they aren't findable by words inside the chart; everything else
-  about them is searchable. Records added one at a time still get their text
-- Extraction still runs on the single add/edit form, where the wait is one record
-  and the person is already waiting on an R2 upload
+  and the wait was felt on every item. Records are saved with an empty
+  `image_text`, which the deploy step fills in (see Phase 3e)
 - Abandoned staging folders are pruned after 7 days
+
+### Phase 3e: Text extraction at deploy time — DONE
+- Extraction used to run while someone was waiting on a form — on every batch
+  item, and again on each add/edit save. OCR costs seconds per image, and that
+  is felt as the tool being slow
+- It now runs once per deploy, in bulk, at the point where you're already
+  waiting for the site to rebuild. Deploy = read any missing chart text, then
+  commit + push
+- Images are fetched back from their public R2 URLs rather than kept locally, so
+  a batch whose staging folder has been cleared is still covered
+- SVGs are downloaded first: a chart whose SVG carries `<text>` elements is read
+  from the XML in milliseconds and its (multi-megabyte) PNG is never fetched.
+  Only charts without SVG text cost an OCR pass
+- `text_extracted: true` marks a record the pass has read, so a chart that
+  genuinely has no words isn't downloaded and OCR'd again on every deploy. A
+  record left unread (no OCR on this machine, image missing from R2) stays
+  unmarked and is retried next time
+- Runs in a background thread with a progress page polling `/deploy/status`;
+  a long pass doesn't hold a request open, and the summary says how many charts
+  were read, how many had text, and what stopped the rest
+- Replacing a record's image on the edit form clears its `image_text`, so the
+  next deploy re-reads the new chart
+- A deploy with nothing staged now reports "nothing to deploy" rather than
+  looking like a git failure
 
 ### Phase 4: Netlify deployment — DONE
 - Git repo with site files + JSON data (images on R2, not in repo)
@@ -143,7 +164,9 @@ Airtable → export_airtable.py → data/export.json + data/images/
 
 For ongoing use, the admin tool handles the full loop:
 ```
-Admin form → upload image to R2 → extract text → save to site/data.json → git push → Netlify rebuilds
+Admin form → upload image to R2 → save to site/data.json
+                                        ↓
+              Deploy → read text from any chart missing it → git push → Netlify rebuilds
 ```
 
 ## Environment Variables
@@ -188,7 +211,8 @@ project/
 │       ├── form.html       # Add/edit form with autocomplete + image upload
 │       ├── batch.html      # Batch upload drop zone + unfinished batches
 │       ├── batch_item.html # One dropped item: preview + questions + skip
-│       └── batch_done.html # Batch summary + deploy button
+│       ├── batch_done.html # Batch summary + deploy button
+│       └── deploy.html     # Deploy progress: text extraction, then push
 ├── site/
 │   ├── index.html          # Main browsing interface (password-gated)
 │   ├── style.css           # Public site styles (Possible brand)

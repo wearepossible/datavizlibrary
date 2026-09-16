@@ -64,7 +64,7 @@
   {% if saved %}
   <form method="post" action="{{ url_for('deploy') }}">
     <button type="submit" class="btn-deploy btn-tall"
-            onclick="return confirm('Commit and push data.json to trigger deploy?')">Deploy to live site</button>
+            onclick="return confirm('Read the text in any new charts, then commit and push to the live site?')">Deploy to live site</button>
   </form>
   {% endif %}
   <a href="{{ url_for('batch') }}" class="btn-secondary">New batch</a>

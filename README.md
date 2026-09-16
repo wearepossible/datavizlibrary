@@ -59,7 +59,9 @@ DATAVIZ_DEBUG=1 python admin/admin.py
 
 The server only listens on `127.0.0.1`, so it's never reachable from other machines. When it's set to start at login, its output goes to `~/Library/Logs/datavizadmin.log`.
 
-The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to commit and push, triggering a Netlify rebuild.
+The admin tool lets you add/edit/delete records and upload images. Changes are saved to `site/data.json`. Click "Deploy" in the admin to publish them.
+
+**Deploy does two things**: it reads the text out of any chart that doesn't have it yet, then commits and pushes `data.json` to trigger a Netlify rebuild. That text is what makes a chart findable by the words printed on it, and reading it costs seconds per image — so it happens once, at the point where you're already waiting for the site to update, rather than while you're filling in forms. A progress page follows it along; charts whose SVG carries real text are read in milliseconds, and only the rest need OCR.
 
 The campaign list on the add/edit form only contains campaigns already in use. **To add a new one**, type its name in the box above the checkboxes and press Enter (or click **+ Add**) — it appears ticked at the top of the list, marked `NEW`, and becomes a normal campaign once you save the record. Typing a name that already exists just ticks it instead of duplicating it.
 
@@ -104,7 +106,8 @@ project/
 │       ├── form.html       # Add/edit form with autocomplete
 │       ├── batch.html      # Batch upload drop zone
 │       ├── batch_item.html # One-at-a-time questions for each dropped file
-│       └── batch_done.html # Batch summary + deploy
+│       ├── batch_done.html # Batch summary + deploy
+│       └── deploy.html      # Deploy progress (text extraction, then push)
 ├── site/                   # Public static site (Phase 3) — deployed to Netlify
 │   ├── index.html          # Single-page app with password gate
 │   ├── style.css           # Possible brand styles
@@ -156,6 +159,6 @@ R2_BUCKET_NAME=possible-dataviz-library
 
 ## Deployment
 
-The `site/` directory is deployed to Netlify. Any push to the main branch triggers an automatic rebuild. The admin tool's "Deploy" button automates this: it runs `git add site/data.json && git commit && git push`.
+The `site/` directory is deployed to Netlify. Any push to the main branch triggers an automatic rebuild. The admin tool's "Deploy" button automates this: it fills in any missing chart text, then runs `git add site/data.json && git commit && git push`.
 
 Images are served directly from Cloudflare R2 (`pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev`) and are not stored in the Git repo.

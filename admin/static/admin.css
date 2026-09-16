@@ -630,6 +630,38 @@ h1 .count {
   transition: width 0.2s;
 }
 
+/* ── Deploy progress page ─────────────────────────────────────────────── */
+
+.deploy-page {
+  max-width: 560px;
+}
+
+.deploy-step {
+  font-size: 0.85rem;
+  color: #321D49;
+  margin-bottom: 0.5rem;
+}
+
+.deploy-count {
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 0.35rem;
+}
+
+.deploy-message {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f4f1f7;
+  color: #321D49;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.deploy-message-error {
+  background: #fdf2f8;
+  color: #BF0978;
+}
+
 /* ── Batch list (unfinished batches) ───────────────────────────────────── */
 
 .section-heading {
