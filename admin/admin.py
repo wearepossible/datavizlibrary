@@ -52,11 +52,7 @@ from werkzeug.utils import secure_filename
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.text_utils import (
-    extract_lines_for_record,
-    extract_text_for_record,
-    extraction_unavailable_reason,
-)
+from scripts.text_utils import extract_text_for_record, extraction_unavailable_reason
 
 # ── Config ──────────────────────────────────────────────────────────────
 
@@ -190,27 +186,17 @@ def _stage_images(tmpdir, png_paths, svg_paths):
     return record
 
 
-def extract_lines_from_paths(png_paths, svg_paths):
-    """Extract text from local image files as separate lines.
+def extract_text_from_paths(png_paths, svg_paths):
+    """Extract searchable text from local image files.
 
     Copies the files into a temp directory and delegates to the shared
-    text_utils extraction (SVG XML parsing, then OCR).  Accepts lists of
-    paths; SVGs are preferred as they extract fastest.
+    text_utils extraction (SVG XML parsing, then OCR).
 
-    Returns (lines, reason).  `reason` is empty when extraction worked; when
+    Returns (text, reason).  `reason` is empty when extraction worked; when
     it came back empty because a tool is missing (Tesseract, cairosvg) it
     holds a message to show the user, so "nothing to read" and "nothing can
     read it" aren't reported as the same thing.
     """
-    with tempfile.TemporaryDirectory() as tmpdir:
-        record = _stage_images(tmpdir, png_paths, svg_paths)
-        lines = extract_lines_for_record(record, tmpdir)
-        reason = "" if lines else extraction_unavailable_reason(record, tmpdir)
-        return lines, reason
-
-
-def extract_text_from_paths(png_paths, svg_paths):
-    """Extract searchable text from local image files as (text, reason)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         record = _stage_images(tmpdir, png_paths, svg_paths)
         text = extract_text_for_record(record, tmpdir)
@@ -221,7 +207,7 @@ def extract_text_from_paths(png_paths, svg_paths):
 def extract_text_from_uploads(png_path, svg_path):
     """Extract searchable text from a single uploaded PNG and/or SVG.
 
-    Returns (text, reason) — see extract_lines_from_paths().
+    Returns (text, reason) — see extract_text_from_paths().
     """
     return extract_text_from_paths([png_path], [svg_path])
 
@@ -438,54 +424,6 @@ def batch_item_paths(state, item):
         [d / name for name in item.get("png_files", [])],
         [d / name for name in item.get("svg_files", [])],
     )
-
-
-def pick_chart_title(lines):
-    """Pick the line of a chart most likely to be its title.
-
-    Charts put their title first, so this takes the first line that reads
-    like a phrase rather than an axis label, a number or a source note.
-    Returns "" if nothing looks title-ish.
-    """
-    for line in lines:
-        candidate = line.strip(" .:;-—_|")
-        if not 8 <= len(candidate) <= 120:
-            continue
-        if len(candidate.split()) < 3:
-            continue
-        # Axis ticks and data labels are mostly digits and symbols
-        if sum(c.isalpha() for c in candidate) < len(candidate) * 0.5:
-            continue
-        if candidate.lower().startswith(("source", "note", "notes", "chart by", "graphic")):
-            continue
-        return candidate
-    return ""
-
-
-def batch_item_analysis(state, item):
-    """Get the item's extracted text and suggested title, caching the result.
-
-    Extraction can be slow (OCR), so both are worked out in one pass and
-    stored in batch.json — revisiting an item never re-runs it.
-
-    Returns (text, title, reason).  A run that found nothing because the
-    machine is missing a tool is deliberately not cached: it reports the
-    reason instead, and tries again next time, so installing the tool is
-    enough to fix an in-progress batch.
-    """
-    if item.get("extracted") or item.get("image_text"):
-        return item.get("image_text") or "", item.get("suggested_title", ""), ""
-
-    png_paths, svg_paths = batch_item_paths(state, item)
-    lines, reason = extract_lines_from_paths(png_paths, svg_paths)
-    if reason:
-        return "", "", reason
-
-    item["image_text"] = " ".join(lines)
-    item["suggested_title"] = pick_chart_title(lines)
-    item["extracted"] = True
-    save_batch(state)
-    return item["image_text"], item["suggested_title"], ""
 
 
 def find_possible_duplicate(records, item):
@@ -784,8 +722,6 @@ def batch_upload():
         item["status"] = "pending"      # pending | saved | skipped
         item["record_id"] = None
         item["headline"] = None
-        item["image_text"] = None       # filled in lazily by batch_item_analysis()
-        item["extracted"] = False       # set once extraction has actually run
         items.append(item)
 
     state = {
@@ -861,15 +797,15 @@ def batch_item(batch_id, index):
             slug, png_paths, svg_paths
         )
 
-        # The form carries text extracted in the background; fall back to
-        # extracting now if that request hadn't finished before submit.
-        image_text = request.form.get("image_text", "").strip()
-        if not image_text:
-            image_text, _, _ = batch_item_analysis(state, item)
-
+        # Batch records are saved with no `image_text`: reading the words out
+        # of a chart costs seconds per image (OCR), which is the whole time
+        # budget of working through a batch.  The trade-off is that these
+        # records aren't findable by the text inside the chart — everything
+        # else about them is searchable, and records added one at a time on
+        # the add form still get their text extracted.
         records.insert(0, record_from_form(
             request.form, slug, campaign,
-            png_files, png_urls, svg_files, svg_urls, image_text,
+            png_files, png_urls, svg_files, svg_urls, "",
         ))
         save_data(records)
 
@@ -910,23 +846,6 @@ def batch_item(batch_id, index):
         all_tags=_get_tags(),
         all_cities=_get_cities(),
     )
-
-
-@app.route("/batch/<batch_id>/item/<int:index>/text")
-def batch_item_text_api(batch_id, index):
-    """JSON endpoint for an item's extracted text and suggested headline.
-
-    Called by the form after it renders, so a slow OCR pass doesn't hold up
-    the page.  The result is cached in batch.json.
-
-    `note` is set when nothing could be read because a tool is missing, so
-    the form can show that instead of "no text in this image".
-    """
-    state = load_batch(batch_id)
-    if not state or not 0 <= index < len(state["items"]):
-        return jsonify({"text": "", "title": "", "note": ""}), 404
-    text, title, note = batch_item_analysis(state, state["items"][index])
-    return jsonify({"text": text, "title": title, "note": note})
 
 
 @app.route("/batch/<batch_id>/file/<path:filename>")

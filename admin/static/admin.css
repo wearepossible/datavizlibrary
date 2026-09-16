@@ -821,58 +821,6 @@ h1 .count {
   line-height: 1.4;
 }
 
-/* Text pulled out of the chart (SVG parsing or OCR) */
-
-.extracted {
-  margin-top: 0.75rem;
-  background: #fff;
-  padding: 0.75rem;
-}
-
-.extracted-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #777;
-  margin-bottom: 0.35rem;
-}
-
-/* One-click "the chart calls itself this" headline suggestion */
-.suggested-title {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: #fdf2f8;
-  border: none;
-  border-left: 3px solid #BF0978;
-  padding: 0.4rem 0.6rem;
-  margin-bottom: 0.5rem;
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #BF0978;
-  cursor: pointer;
-}
-
-.suggested-title:hover {
-  background: #fce7f3;
-}
-
-.extracted-body {
-  font-size: 0.72rem;
-  color: #666;
-  max-height: 120px;
-  overflow-y: auto;
-  line-height: 1.45;
-}
-
-/* Shown when text extraction couldn't run, rather than found nothing */
-.extracted-body.extracted-warn {
-  color: #BF0978;
-  font-weight: 500;
-}
-
 .btn-inline {
   background: none;
   border: none;

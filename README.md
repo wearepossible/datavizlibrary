@@ -69,7 +69,7 @@ The campaign list on the add/edit form only contains campaigns already in use. *
 
 1. Drag PNGs and SVGs — or whole folders — onto the drop zone.
 2. Files sharing a filename (`chart.png` + `chart.svg`) become one record. Names don't have to match exactly: a PNG whose name contains the SVG's — `chart.svg` + `chart@2x.png` — is paired with it too, and the form says so in case the match was wrong. Anything still unpaired becomes a record on its own. Non-image files are ignored.
-3. You're then asked about each one in turn, with the image on screen: headline (pre-filled from the filename, or one click to use the chart's own title), campaign, tags, and the rest. **Skip** moves on without saving, so anything you can't answer for can wait.
+3. You're then asked about each one in turn, with the image on screen: headline (pre-filled from the filename), campaign, tags, and the rest. **Skip** moves on without saving, so anything you can't answer for can wait.
 4. Campaign and status carry over to the next item; tags, cities, data source, data link and date each get a "copy previous" button.
 5. A summary at the end lists what was saved and what wasn't, with a Deploy button.
 

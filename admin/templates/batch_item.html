@@ -5,10 +5,7 @@
    anything.  Fields that tend to repeat across a batch (campaign, status,
    data source, date) are carried over from the previously saved item; tags,
    cities and the data link get a "copy previous" button instead, since those
-   are usually per-chart.
-
-   Extracted chart text is fetched in the background after render so a slow
-   OCR pass doesn't hold up the form. #}
+   are usually per-chart. #}
 
 {% extends "base.html" %}
 {% block title %}Batch {{ index + 1 }}/{{ total }}{% endblock %}
@@ -70,19 +67,10 @@
         like @2x). Skip if they aren't the same chart.
       </div>
     {% endif %}
-
-    <!-- Text pulled out of the chart itself — powers search on the public site -->
-    <div class="extracted" id="extracted">
-      <div class="extracted-label">Text found in the chart</div>
-      <button type="button" class="suggested-title" id="use-title-btn" hidden></button>
-      <div class="extracted-body" id="extracted-body">Reading…</div>
-    </div>
   </div>
 
   <!-- ── Right: the questions ── -->
   <form method="post" class="record-form wizard-form" id="item-form">
-    <input type="hidden" name="image_text" id="image_text" value="">
-
     <div class="form-group">
       <label for="headline">Headline * <span class="hint">from the filename — edit it</span></label>
       <input type="text" id="headline" name="headline" value="{{ suggested_headline }}" required autofocus>
@@ -194,40 +182,6 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById(btn.dataset.copyTo).value = btn.dataset.copyValue;
     });
   });
-
-  // ── Extracted chart text ──
-  // Fetched after render because OCR on a PNG can take a few seconds; the
-  // hidden image_text field is submitted with the form so the server doesn't
-  // have to redo the work.
-  const body = document.getElementById('extracted-body');
-  const hidden = document.getElementById('image_text');
-  const titleBtn = document.getElementById('use-title-btn');
-
-  fetch('{{ url_for("batch_item_text_api", batch_id=state.id, index=index) }}')
-    .then(r => r.json())
-    .then(data => {
-      const text = (data.text || '').trim();
-      hidden.value = text;
-      if (data.note) {
-        // Extraction couldn't run at all (a missing OCR tool) — saying "no
-        // text found" here would blame the chart for the machine's problem.
-        body.textContent = data.note;
-        body.classList.add('extracted-warn');
-      } else {
-        body.classList.remove('extracted-warn');
-        body.textContent = text || 'No readable text found in this image.';
-      }
-      // The chart's own title usually beats the filename as a headline —
-      // offer it as one click rather than overwriting what's there.
-      if (data.title) {
-        titleBtn.textContent = '↑ Use as headline: “' + data.title + '”';
-        titleBtn.hidden = false;
-        titleBtn.addEventListener('click', function () {
-          document.getElementById('headline').value = data.title;
-        });
-      }
-    })
-    .catch(() => { body.textContent = 'Could not read text from this image.'; });
 
   // Cmd/Ctrl+Enter saves and moves on
   document.addEventListener('keydown', function (e) {

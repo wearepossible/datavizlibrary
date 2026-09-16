@@ -89,24 +89,20 @@ All four phases of the migration are complete:
 - Dropped files are staged in `data/batches/<batch_id>/` (gitignored) with a
   `batch.json` holding the grouping and progress; state is on disk, not in memory,
   so a closed tab or Flask reload doesn't lose a half-finished batch
-- Per item: image preview, headline pre-filled from the filename (or one click to
-  use the chart's own title from the extracted text), all other fields optional,
-  and a Skip button
+- Per item: image preview, headline pre-filled from the filename, all other
+  fields optional, and a Skip button
 - Campaign and status carry over to the next item; tags/cities/data source/data
   link/date get "copy previous" buttons instead (deliberate — those vary per chart)
 - Likely duplicates are flagged (filename match, or filename slug matching a
   record id) but never auto-skipped
-- Text extraction runs async after render and is cached in `batch.json`, so a slow
-  OCR pass never blocks the form
-- Extraction failing for want of a tool (Tesseract missing from a GUI-launched
-  process's PATH, no cairosvg) used to be indistinguishable from a wordless chart —
-  both showed "No readable text found". `text_utils.extraction_unavailable_reason()`
-  now tells the two apart and the form shows which; those results are never cached,
-  so installing the tool fixes an in-progress batch without restarting it
-- `text_utils` looks for the Tesseract binary in the usual Homebrew/MacPorts
-  locations as well as on PATH, and falls back to a regex sweep for SVGs that a
-  strict XML parser rejects (undeclared entities like `&nbsp;` are common in
-  exports and used to lose the whole file's text)
+- **No text extraction in the batch flow** — it was tried (a "Text found in the
+  chart" panel, extracted async and cached in `batch.json`) and removed: OCR costs
+  seconds per image, which is the entire time budget of working through a batch,
+  and the wait was felt on every item. Batch records are saved with an empty
+  `image_text`, so they aren't findable by words inside the chart; everything else
+  about them is searchable. Records added one at a time still get their text
+- Extraction still runs on the single add/edit form, where the wait is one record
+  and the person is already waiting on an R2 upload
 - Abandoned staging folders are pruned after 7 days
 
 ### Phase 4: Netlify deployment — DONE

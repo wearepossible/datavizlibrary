@@ -54,6 +54,11 @@ if _tesseract_cmd:
 # of a tool that may be running all day as a login item.
 _TESSERACT_OK = False
 
+# Tesseract's running time scales with the number of pixels, and chart text
+# is large, so a retina export is downscaled first: a 3200px-wide PNG costs
+# several seconds to read at full size and very little accuracy at 2400.
+OCR_MAX_DIMENSION = 2400
+
 # Fallback for SVGs that a strict XML parser rejects.  Real-world exports
 # quite often contain undeclared entities (&nbsp;) or stray markup, which is
 # fatal to ElementTree but harmless to us — we only want the words.  Matching
@@ -159,19 +164,30 @@ def extract_svg_text(svg_path):
     return " ".join(svg_text_elements(svg_path))
 
 
-def svg_has_text_elements(svg_path):
-    """Check if an SVG file contains readable <text>/<tspan> content.
+def _prepare_for_ocr(image):
+    """Downscale an oversized image so OCR stays quick.
 
-    Used as a quick pre-check before attempting the more expensive OCR path.
+    Returns the image unchanged when it's already within OCR_MAX_DIMENSION.
     """
-    return bool(svg_text_elements(svg_path))
+    longest = max(image.size)
+    if longest <= OCR_MAX_DIMENSION:
+        return image
+    scale = OCR_MAX_DIMENSION / longest
+    size = (max(1, round(image.width * scale)), max(1, round(image.height * scale)))
+    return image.resize(size, Image.LANCZOS)
 
 
 def ocr_png(png_path):
-    """Run Tesseract OCR on a PNG file and return the recognised text."""
+    """Run Tesseract OCR on a PNG file and return the recognised text.
+
+    Checks that Tesseract is there before touching the image: pytesseract
+    encodes the image to a temp file and only then discovers the binary is
+    missing, which wastes a noticeable fraction of a second per image.
+    """
+    if not tesseract_status()[0]:
+        return ""
     try:
-        image = Image.open(png_path)
-        text = pytesseract.image_to_string(image)
+        text = pytesseract.image_to_string(_prepare_for_ocr(Image.open(png_path)))
         return text.strip()
     except Exception as e:
         print(f"  OCR failed for {png_path.name}: {e}")
@@ -183,13 +199,17 @@ def ocr_svg(svg_path):
 
     This is the slowest extraction path — only used when the SVG has no
     native <text> elements but we still want to try reading visible text.
+    Both tools are checked first, so a missing one costs a moment rather
+    than a full rasterisation.
     """
+    if not (tesseract_status()[0] and svg_rasteriser_status()[0]):
+        return ""
     try:
         import cairosvg
         from io import BytesIO
 
         png_data = cairosvg.svg2png(url=str(svg_path))
-        image = Image.open(BytesIO(png_data))
+        image = _prepare_for_ocr(Image.open(BytesIO(png_data)))
         text = pytesseract.image_to_string(image)
         return text.strip()
     except Exception as e:
