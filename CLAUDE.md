@@ -76,8 +76,16 @@ All four phases of the migration are complete:
 
 ### Phase 3c: Batch upload — DONE
 - Drop many PNGs/SVGs (or folders) at `/batch`, answer questions about each in turn
-- Files are grouped into records by filename stem, case-insensitively — `chart.png` +
-  `chart.svg` become one record, unpaired files become records of their own
+- Files are grouped into records by filename stem, ignoring case, separators and
+  punctuation — `chart.png` + `chart.svg` become one record, unpaired files become
+  records of their own
+- Exact-name grouping misses the common case of a PNG exported with a suffix its
+  SVG doesn't have (`chart.svg` + `chart@2x.png`), so leftovers are then paired by
+  containment: one stem inside the other. Guarded against merging genuinely
+  different charts — the shorter stem must be ≥ 6 characters, the leftover ≤ 8
+  (so `ev-sales` doesn't swallow `ev-sales-by-country`), complete pairs are never
+  touched, and an ambiguous tie is left alone. Pairs found this way are flagged in
+  the form so a wrong match is visible rather than silent
 - Dropped files are staged in `data/batches/<batch_id>/` (gitignored) with a
   `batch.json` holding the grouping and progress; state is on disk, not in memory,
   so a closed tab or Flask reload doesn't lose a half-finished batch
@@ -90,6 +98,15 @@ All four phases of the migration are complete:
   record id) but never auto-skipped
 - Text extraction runs async after render and is cached in `batch.json`, so a slow
   OCR pass never blocks the form
+- Extraction failing for want of a tool (Tesseract missing from a GUI-launched
+  process's PATH, no cairosvg) used to be indistinguishable from a wordless chart —
+  both showed "No readable text found". `text_utils.extraction_unavailable_reason()`
+  now tells the two apart and the form shows which; those results are never cached,
+  so installing the tool fixes an in-progress batch without restarting it
+- `text_utils` looks for the Tesseract binary in the usual Homebrew/MacPorts
+  locations as well as on PATH, and falls back to a regex sweep for SVGs that a
+  strict XML parser rejects (undeclared entities like `&nbsp;` are common in
+  exports and used to lose the whole file's text)
 - Abandoned staging folders are pruned after 7 days
 
 ### Phase 4: Netlify deployment — DONE
