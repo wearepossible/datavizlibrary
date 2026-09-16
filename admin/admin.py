@@ -10,7 +10,8 @@ managing the dataviz archive.  Features:
     suffixes such as `chart.svg` + `chart@2x.png`)
   - Edit existing records and replace images
   - Delete records (removes images from R2 too)
-  - One-click deploy (git commit + push to trigger Netlify rebuild)
+  - One-click deploy: reads the text out of any chart still missing it,
+    then commits + pushes data.json to trigger a Netlify rebuild
 
 Images are uploaded directly to Cloudflare R2; record metadata is stored in
 site/data.json (the same file the public static site reads).
@@ -27,13 +28,16 @@ import mimetypes
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
+import threading
 import time
 import uuid
 from pathlib import Path
 
 import boto3
+import requests
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -53,9 +57,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.text_utils import (
-    extract_lines_for_record,
     extract_text_for_record,
     extraction_unavailable_reason,
+    tesseract_status,
 )
 
 # ── Config ──────────────────────────────────────────────────────────────
@@ -69,6 +73,10 @@ R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
 R2_PUBLIC_URL = "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev"
 # EU jurisdiction requires ".eu." in the S3-compatible endpoint URL
 R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.eu.r2.cloudflarestorage.com"
+
+# How long to wait for one image when fetching it back from R2 for text
+# extraction.  Generous: these are multi-megabyte chart exports.
+IMAGE_FETCH_TIMEOUT = 60
 
 # The single JSON file that holds all record metadata — shared with the
 # public static site.  Changes here are immediately visible when serving
@@ -175,55 +183,66 @@ def parse_comma_list(text):
     return [item.strip() for item in text.split(",") if item.strip()]
 
 
-def _stage_images(tmpdir, png_paths, svg_paths):
-    """Copy image files into tmpdir and return a record-shaped dict for them."""
-    record = {"png_files": [], "svg_files": []}
-    for key, paths in (("png_files", png_paths), ("svg_files", svg_paths)):
-        for p in paths or []:
-            if not p:
+def record_needs_text(record):
+    """True if a record could still gain searchable text from its images.
+
+    `text_extracted` marks a record the deploy pass has already read, so a
+    chart that genuinely has no words in it isn't downloaded and OCR'd again
+    on every deploy.
+    """
+    if record.get("image_text") or record.get("text_extracted"):
+        return False
+    return bool(record.get("png_urls") or record.get("svg_urls"))
+
+
+def _fetch_record_images(tmpdir, record, kinds):
+    """Download a published record's images from R2 into tmpdir.
+
+    Returns a record-shaped dict naming the files that arrived, ready to hand
+    to text_utils.  An image that can't be fetched is skipped rather than
+    failing the deploy: the cost is less searchable text, not a lost record.
+    """
+    staged = {"png_files": [], "svg_files": []}
+    for kind in kinds:
+        for name, url in zip(record.get(f"{kind}_files", []), record.get(f"{kind}_urls", [])):
+            try:
+                response = requests.get(url, timeout=IMAGE_FETCH_TIMEOUT)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"  Could not fetch {url}: {e}")
                 continue
-            src = Path(p)
-            if not src.exists():
-                continue
-            (Path(tmpdir) / src.name).write_bytes(src.read_bytes())
-            record[key].append(src.name)
-    return record
+            (Path(tmpdir) / name).write_bytes(response.content)
+            staged[f"{kind}_files"].append(name)
+    return staged
 
 
-def extract_lines_from_paths(png_paths, svg_paths):
-    """Extract text from local image files as separate lines.
+def extract_text_from_urls(record, allow_ocr=True):
+    """Read the searchable text out of a published record's images.
 
-    Copies the files into a temp directory and delegates to the shared
-    text_utils extraction (SVG XML parsing, then OCR).  Accepts lists of
-    paths; SVGs are preferred as they extract fastest.
+    The SVG is fetched first: when a chart's SVG carries <text> elements the
+    words come out of the XML in milliseconds, and the PNG — several
+    megabytes, and seconds of OCR — never has to be downloaded at all.
 
-    Returns (lines, reason).  `reason` is empty when extraction worked; when
-    it came back empty because a tool is missing (Tesseract, cairosvg) it
-    holds a message to show the user, so "nothing to read" and "nothing can
-    read it" aren't reported as the same thing.
+    `allow_ocr` is False when the machine has no OCR to offer, in which case
+    a chart that needs it is left alone rather than downloaded for nothing.
+
+    Returns (text, reason); `reason` explains an empty result caused by a
+    missing tool rather than a wordless chart.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
-        record = _stage_images(tmpdir, png_paths, svg_paths)
-        lines = extract_lines_for_record(record, tmpdir)
-        reason = "" if lines else extraction_unavailable_reason(record, tmpdir)
-        return lines, reason
+        staged = _fetch_record_images(tmpdir, record, ("svg",))
+        if staged["svg_files"]:
+            text = extract_text_for_record(staged, tmpdir)
+            if text:
+                return text, ""
 
+        if not allow_ocr:
+            return "", tesseract_status()[1]
 
-def extract_text_from_paths(png_paths, svg_paths):
-    """Extract searchable text from local image files as (text, reason)."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        record = _stage_images(tmpdir, png_paths, svg_paths)
-        text = extract_text_for_record(record, tmpdir)
-        reason = "" if text else extraction_unavailable_reason(record, tmpdir)
+        staged["png_files"] = _fetch_record_images(tmpdir, record, ("png",))["png_files"]
+        text = extract_text_for_record(staged, tmpdir)
+        reason = "" if text else extraction_unavailable_reason(staged, tmpdir)
         return text, reason
-
-
-def extract_text_from_uploads(png_path, svg_path):
-    """Extract searchable text from a single uploaded PNG and/or SVG.
-
-    Returns (text, reason) — see extract_lines_from_paths().
-    """
-    return extract_text_from_paths([png_path], [svg_path])
 
 
 def upload_images_for_slug(slug, png_paths, svg_paths):
@@ -440,54 +459,6 @@ def batch_item_paths(state, item):
     )
 
 
-def pick_chart_title(lines):
-    """Pick the line of a chart most likely to be its title.
-
-    Charts put their title first, so this takes the first line that reads
-    like a phrase rather than an axis label, a number or a source note.
-    Returns "" if nothing looks title-ish.
-    """
-    for line in lines:
-        candidate = line.strip(" .:;-—_|")
-        if not 8 <= len(candidate) <= 120:
-            continue
-        if len(candidate.split()) < 3:
-            continue
-        # Axis ticks and data labels are mostly digits and symbols
-        if sum(c.isalpha() for c in candidate) < len(candidate) * 0.5:
-            continue
-        if candidate.lower().startswith(("source", "note", "notes", "chart by", "graphic")):
-            continue
-        return candidate
-    return ""
-
-
-def batch_item_analysis(state, item):
-    """Get the item's extracted text and suggested title, caching the result.
-
-    Extraction can be slow (OCR), so both are worked out in one pass and
-    stored in batch.json — revisiting an item never re-runs it.
-
-    Returns (text, title, reason).  A run that found nothing because the
-    machine is missing a tool is deliberately not cached: it reports the
-    reason instead, and tries again next time, so installing the tool is
-    enough to fix an in-progress batch.
-    """
-    if item.get("extracted") or item.get("image_text"):
-        return item.get("image_text") or "", item.get("suggested_title", ""), ""
-
-    png_paths, svg_paths = batch_item_paths(state, item)
-    lines, reason = extract_lines_from_paths(png_paths, svg_paths)
-    if reason:
-        return "", "", reason
-
-    item["image_text"] = " ".join(lines)
-    item["suggested_title"] = pick_chart_title(lines)
-    item["extracted"] = True
-    save_batch(state)
-    return item["image_text"], item["suggested_title"], ""
-
-
 def find_possible_duplicate(records, item):
     """Find an existing record that looks like this item has already been added.
 
@@ -580,27 +551,22 @@ def add():
         svg_files.append(svg_filename)
         svg_urls.append(url)
 
-    # Extract searchable text from the uploaded images (for full-text search)
-    image_text, text_reason = extract_text_from_uploads(png_tmp_path, svg_tmp_path)
-
-    # Clean up temp files now that upload + text extraction are done
+    # Clean up temp files now that the upload is done
     for p in [png_tmp_path, svg_tmp_path]:
         if p and Path(p).exists():
             Path(p).unlink()
 
-    # Build the new record and prepend it (newest first)
+    # Searchable chart text is left empty here and filled in at deploy time —
+    # reading it costs seconds of OCR per image, which shouldn't be spent
+    # while someone is waiting on a form.
     record = record_from_form(
         request.form, slug, campaign,
-        png_files, png_urls, svg_files, svg_urls, image_text,
+        png_files, png_urls, svg_files, svg_urls, "",
     )
 
     records.insert(0, record)
     save_data(records)
     flash(f'Added "{headline}"', "success")
-    # Saved either way — but say so when the chart's text is missing from
-    # search because of the machine rather than the image.
-    if text_reason:
-        flash(f"Couldn't read the chart's text: {text_reason}", "error")
     return redirect(url_for("index"))
 
 
@@ -656,15 +622,11 @@ def edit(record_id):
         record["svg_files"] = [svg_filename]
         record["svg_urls"] = [url]
 
-    # Re-extract text if new images were uploaded
-    text_reason = ""
+    # New images mean the stored text describes a chart that's no longer
+    # there — clear it so the next deploy reads the replacement.
     if png_tmp_path or svg_tmp_path:
-        image_text, text_reason = extract_text_from_uploads(
-            png_tmp_path or None,
-            svg_tmp_path or None,
-        )
-        if image_text:
-            record["image_text"] = image_text
+        record["image_text"] = ""
+        record.pop("text_extracted", None)
 
     record["has_images"] = bool(record.get("png_files") or record.get("svg_files"))
 
@@ -675,8 +637,6 @@ def edit(record_id):
 
     save_data(records)
     flash(f'Updated "{record["headline"]}"', "success")
-    if text_reason:
-        flash(f"Couldn't read the chart's text: {text_reason}", "error")
     return redirect(url_for("index"))
 
 
@@ -784,8 +744,6 @@ def batch_upload():
         item["status"] = "pending"      # pending | saved | skipped
         item["record_id"] = None
         item["headline"] = None
-        item["image_text"] = None       # filled in lazily by batch_item_analysis()
-        item["extracted"] = False       # set once extraction has actually run
         items.append(item)
 
     state = {
@@ -861,15 +819,15 @@ def batch_item(batch_id, index):
             slug, png_paths, svg_paths
         )
 
-        # The form carries text extracted in the background; fall back to
-        # extracting now if that request hadn't finished before submit.
-        image_text = request.form.get("image_text", "").strip()
-        if not image_text:
-            image_text, _, _ = batch_item_analysis(state, item)
-
+        # Batch records are saved with no `image_text`: reading the words out
+        # of a chart costs seconds per image (OCR), which is the whole time
+        # budget of working through a batch.  The trade-off is that these
+        # records aren't findable by the text inside the chart — everything
+        # else about them is searchable, and records added one at a time on
+        # the add form still get their text extracted.
         records.insert(0, record_from_form(
             request.form, slug, campaign,
-            png_files, png_urls, svg_files, svg_urls, image_text,
+            png_files, png_urls, svg_files, svg_urls, "",
         ))
         save_data(records)
 
@@ -910,23 +868,6 @@ def batch_item(batch_id, index):
         all_tags=_get_tags(),
         all_cities=_get_cities(),
     )
-
-
-@app.route("/batch/<batch_id>/item/<int:index>/text")
-def batch_item_text_api(batch_id, index):
-    """JSON endpoint for an item's extracted text and suggested headline.
-
-    Called by the form after it renders, so a slow OCR pass doesn't hold up
-    the page.  The result is cached in batch.json.
-
-    `note` is set when nothing could be read because a tool is missing, so
-    the form can show that instead of "no text in this image".
-    """
-    state = load_batch(batch_id)
-    if not state or not 0 <= index < len(state["items"]):
-        return jsonify({"text": "", "title": "", "note": ""}), 404
-    text, title, note = batch_item_analysis(state, state["items"][index])
-    return jsonify({"text": text, "title": title, "note": note})
 
 
 @app.route("/batch/<batch_id>/file/<path:filename>")
@@ -981,36 +922,152 @@ def autocomplete():
     return jsonify({"tags": sorted(tags), "cities": sorted(cities)})
 
 
+# ── Deploy ──────────────────────────────────────────────────────────────
+# Deploying does two things: read the text out of any chart that doesn't
+# have it yet, then commit and push data.json for Netlify to rebuild from.
+#
+# The text is what makes a chart findable by the words printed on it.  Doing
+# it here — once, in bulk, at the point where you're already waiting for the
+# site to update — keeps it off the path of every form save, where OCR's few
+# seconds per image are felt as the tool being slow.
+#
+# It runs in a background thread so a long pass doesn't hold a request open;
+# the browser polls /deploy/status and shows the progress.
+
+_deploy_lock = threading.Lock()
+_deploy_state = {"status": "idle", "step": "", "done": 0, "total": 0, "message": ""}
+
+
+def set_deploy_state(**fields):
+    """Update the running deploy's progress."""
+    with _deploy_lock:
+        _deploy_state.update(fields)
+
+
+def get_deploy_state():
+    """A snapshot of the deploy's progress, safe to hand to another thread."""
+    with _deploy_lock:
+        return dict(_deploy_state)
+
+
+def extract_missing_text():
+    """Fill in image_text for every record still without it.
+
+    Images are fetched back from R2 rather than kept locally, so this works
+    for records added on any machine, and for a batch whose staging folder
+    has long since been cleared.
+
+    Returns a one-line summary for the deploy message.
+    """
+    pending = [r for r in load_data() if record_needs_text(r)]
+    if not pending:
+        return ""
+
+    set_deploy_state(step="Reading the text in new charts", done=0, total=len(pending))
+
+    # Asked once, not per chart: without OCR, a chart whose text isn't in an
+    # SVG can't be read at all, and there's no point downloading its PNG to
+    # find that out.  Charts that do have SVG text are still read.
+    ocr_ready = tesseract_status()[0]
+
+    extracted = {}
+    blocked = ""
+    unread = 0
+    for i, record in enumerate(pending, start=1):
+        text, reason = extract_text_from_urls(record, allow_ocr=ocr_ready)
+        if reason:
+            # Left unmarked on purpose, so a later deploy — on a machine
+            # where the tool is installed — picks it up again.
+            blocked = blocked or reason
+            unread += 1
+        else:
+            extracted[record["id"]] = text
+        set_deploy_state(done=i)
+
+    if extracted:
+        # Re-read before writing: this pass can take minutes, and a record
+        # saved in another tab meanwhile mustn't be rolled back by it.
+        records = load_data()
+        for record in records:
+            if record["id"] in extracted and record_needs_text(record):
+                record["image_text"] = extracted[record["id"]]
+                record["text_extracted"] = True
+        save_data(records)
+
+    summary = []
+    if extracted:
+        found = sum(1 for text in extracted.values() if text)
+        summary.append(f"Read {len(extracted)} chart(s), found text in {found}.")
+    if blocked:
+        summary.append(f"Couldn't read {unread} more. {blocked}")
+    return " ".join(summary)
+
+
+def git_publish():
+    """Commit and push site/data.json.  Returns (ok, message)."""
+    def run(*args):
+        return subprocess.run(args, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
+
+    add = run("git", "add", "site/data.json")
+    if add.returncode:
+        return False, f"git add failed: {add.stderr.strip()}"
+
+    commit = run("git", "commit", "-m", "Update data.json via admin tool")
+    if commit.returncode:
+        # Nothing staged isn't a failure — the live site already matches
+        if "nothing to commit" in (commit.stdout + commit.stderr).lower():
+            return True, "Nothing to deploy — the live site is already up to date."
+        return False, f"git commit failed: {(commit.stderr or commit.stdout).strip()}"
+
+    push = run("git", "push")
+    if push.returncode:
+        return False, f"git push failed: {push.stderr.strip()}"
+    return True, "Deployed. Netlify rebuilds the site within a minute or two."
+
+
+def run_deploy():
+    """The background job behind the Deploy button."""
+    try:
+        note = extract_missing_text()
+    except Exception as e:
+        # Never let a text problem block the deploy itself — the records are
+        # saved either way, and the next deploy will try them again.
+        note = f"Couldn't read the chart text ({e}); deploying anyway."
+
+    set_deploy_state(step="Committing and pushing", done=0, total=0)
+    ok, message = git_publish()
+    set_deploy_state(
+        status="done" if ok else "error",
+        step="",
+        message=" ".join(part for part in (message, note) if part),
+    )
+
+
 @app.route("/deploy", methods=["POST"])
 def deploy():
-    """One-click deploy: git add + commit + push site/data.json.
+    """Start a deploy, then show its progress."""
+    with _deploy_lock:
+        already_running = _deploy_state["status"] == "running"
+        if not already_running:
+            _deploy_state.update(
+                status="running", step="Starting", done=0, total=0, message="")
 
-    Netlify is configured to auto-deploy on push, so this is all that's
-    needed to publish changes to the live site.
-    """
-    import subprocess
+    if not already_running:
+        threading.Thread(target=run_deploy, daemon=True).start()
 
-    try:
-        subprocess.run(
-            ["git", "add", "site/data.json"],
-            cwd=str(PROJECT_ROOT),
-            check=True, capture_output=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-m", "Update data.json via admin tool"],
-            cwd=str(PROJECT_ROOT),
-            check=True, capture_output=True,
-        )
-        subprocess.run(
-            ["git", "push"],
-            cwd=str(PROJECT_ROOT),
-            check=True, capture_output=True,
-        )
-        flash("Deployed! Pushed to Git.", "success")
-    except subprocess.CalledProcessError as e:
-        flash(f"Deploy failed: {e.stderr.decode() if e.stderr else str(e)}", "error")
+    return redirect(url_for("deploy_progress"))
 
-    return redirect(url_for("index"))
+
+@app.route("/deploy/progress")
+def deploy_progress():
+    """Page that follows the deploy along."""
+    return render_template("deploy.html", state=get_deploy_state())
+
+
+@app.route("/deploy/status")
+def deploy_status():
+    """JSON the progress page polls."""
+    return jsonify(get_deploy_state())
 
 
 # ── Helpers for form dropdowns ──────────────────────────────────────────
