@@ -1426,9 +1426,9 @@
   {
     "id": "we-looked-at-whether-theres-more-traffic-when-schools-are-in-term-the-clear-answer-is-yes",
     "headline": "We looked at whether there\u2019s more traffic when schools are in term. The clear answer is yes.",
-    "status": "Done",
+    "status": "Spiked",
     "campaign": "School Run Cruncher",
-    "relevant_cities": "",
+    "relevant_cities": [],
     "tags": [
       "Bar Chart",
       "School Streets"
@@ -4106,9 +4106,9 @@
   {
     "id": "it-turns-out-that-private-schools-cause-two-thirds-of-school-run-congestion-on-these-routes",
     "headline": "It turns out that private schools cause two thirds of school run congestion on these routes.",
-    "status": "Done",
+    "status": "Spiked",
     "campaign": "School Run Cruncher",
-    "relevant_cities": "",
+    "relevant_cities": [],
     "tags": [
       "Stacked Bar Chart",
       "School Streets"
@@ -10032,9 +10032,9 @@
   {
     "id": "when-does-traffic-peakusually-around-830am-during-term-time",
     "headline": "When does traffic peak?Usually around 8.30am during term time.",
-    "status": "Done",
+    "status": "Spiked",
     "campaign": "School Run Cruncher",
-    "relevant_cities": "",
+    "relevant_cities": [],
     "tags": [
       "Line Chart",
       "School Streets"
