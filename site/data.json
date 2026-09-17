@@ -1,5 +1,437 @@
 [
   {
+    "id": "mayoral-transport-targets-climate-3",
+    "headline": "Climate 3",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Area Chart",
+      "Mayoral Targets",
+      "Electric Cars"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-climate-3.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-climate-3.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "46% of car kilometres are electric by 2030 Share of car kilometres Central Inner Outer 100% 80% 60% 40% 20% 0% 2020 2022 2024 2020 2022 2024 2020 2022 2024 Possible. Data source: oe sims Inspiring climate action DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-climate-3.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-climate-3.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-climate-2",
+    "headline": "Climate 2",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "CO2 Emissions",
+      "Greenhouse Gas Emissions"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-climate-2.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-climate-2.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 9: Climate All new cars and vans registered in London for the first time are battery electric from 2030 Share of battery electric vehicles according to year of registration 100% @ Target 80% 60% 40% 20% Vans 0% 2018 2020 2022 2024 2026 2028 2030 Possible. Inspiring climate action Data source: DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-climate-2.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-climate-2.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-co2-emissions",
+    "headline": "CO2 Emissions",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "CO2 Emissions",
+      "Greenhouse Gas Emissions"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-co2-emissions.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-co2-emissions.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 9: Climate 72% reduction in CO2 emissions from transport (excluding aviation, from a 2013 base). Road and rail on a clear trajectory to reach zero carbon by 2050. The Mayor was re-elected in 2021 on a mandate for London to be a net zero carbon city by 2030. CO2 emissions from surface transport (in million tonnes) in London 2024 estimate .. Actual progress *s.Net zero target @) e 2010 2012 2014 2016 2018 2020 2022 2024 2026 2028 2030 Possible. Data source: Sue cians Inspiring climate action TfL Travel in London 2025 Annual overview",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-co2-emissions.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-co2-emissions.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-air-pollution-2",
+    "headline": "Air Pollution 2",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Map",
+      "Mayoral Targets",
+      "Air Pollution"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-air-pollution-2.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-air-pollution-2.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 8: Air Pollution Despite huge progress, we know that NO2 concentrations vary across the capital and many roads are above legal and healthy levels. Annual mean NO2 (ug/m3) concentrations 2022 <5 5-] 20-25 25-30 50-55 35-40 40-45 45-50 50-55 >55 Data source: ee ossi e. Inspiring climate action DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-air-pollution-2.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-air-pollution-2.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-air-pollution",
+    "headline": "Air Pollution",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Air Pollution"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-air-pollution.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-air-pollution.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 8: Air Pollution Reduce harmful NO2 concentrations by between 60% and 70% against 2016 levels by 2040 Average roadside nitrogen dioxide (NO2) concentrations (ug/m3) There have been impressive reductions in air pollution, especially in central London, N since 2016 - but there is some way to go to meet \\y WHO guideline levels. Central ~~~_ \\. Central Inner ~~~ ~s target Outer ~~. >. ~ sdInner ~~._~e target WHO guideline ~ Outer Donn rcr ese sscessscccsescccsssccssssacccssaccrsssscssssssscsssss target 2010 2015 2020 2025 2030 2035 2040 Possible. Data source: oe sims Inspiring climate action TfL Travel in London 2025 Annual overview",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-air-pollution.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-air-pollution.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-bus-travel",
+    "headline": "Bus Travel",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Buses"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-bus-travel.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-bus-travel.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 7: Bus Travel 10% increase in speed over 2015 baseline Average bus speed (mph) 1] Target Actual e progress : . 10 . 9 8 2014 2016 2018 2020 2022 2024 2026 2028 2030 Possible. Inspiring climate action Data source: DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-bus-travel.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-bus-travel.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-car-ownership",
+    "headline": "Car Ownership",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Car Ownership"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-car-ownership.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-car-ownership.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 6: Car Ownership 250,000 fewer privately owned cars by 2041, down from the 2018 baseline of 2.5 million Licensed cars in London 2,500,000 Actual = = = \"\"\"---- e progress Target 2,000,000 1,500,000 1,000,000 There will still be more than 2.2 million privately-owned cars in London when this target is met. 500,000 Reducing this number further, and quickly, will help ensure other MTS targets are achieved. 0 2010 2015 2020 {00 2030 2035 2040 Q2 Possible. Data source: oe sims Inspiring climate action DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-car-ownership.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-car-ownership.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-car-use",
+    "headline": "Car Use",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Traffic Counts"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-car-use.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-car-use.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 5: Car Use 27% decline in car kilometres driven by 2030 (from a 2018 base) Traffic volumes: car and taxi vehicle km driven (billions) Actual progress a ) 10 Target 5 0 2010 2012 2014 2016 2018 2020 2022 2024 2026 2028 2030 Possible. Inspiring climate action Data source: DfT Road Traffic Statistics",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-car-use.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-car-use.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-road-traffic",
+    "headline": "Road Traffic",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Traffic Counts"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-road-traffic.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-road-traffic.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 4: Road Traffic 10% to 15% reduction in overall traffic levels by 2041 (assumed here is a target of 15%) Traffic volumes: total vehicle km driven (billions) 20 we Target Actuglh renee aoe progress 15 10 5 ) 2012 2016 2020 2024 =2028 2032 2036 2040 Data source: Poss i ble. TfL Travel in London 2025 Annual Overview Inspiring climate action",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-road-traffic.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-road-traffic.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-vision-zero-2",
+    "headline": "Vision Zero 2",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Road Safety"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-vision-zero-2.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-vision-zero-2.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "The upcoming refresh of the TfL Vision Zero Action Plan must prioritise pedestrians and cyclist safety. Number of people killed or seriously Pedestrians injured on London's roads Cyclists 4,065 4000 3920 44, 3,881 3,905 3,961 , 3,710 3,707 3,579 3,070 1099 ~= +1,080 3,000 figs 4 1,019 894 1,042 806 B56 767 768 2,000 782 @ 778 703 689 868 1,412 1,297 [1,286 1366 Hf 1,350 1,000 868 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 Data source: TfL Casualties in Greater London 2024 Data Annex Possible. Inspiring climate action",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-vision-zero-2.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-vision-zero-2.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-vision-zero",
+    "headline": "Vision Zero",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Road Safety"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-vision-zero.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-vision-zero.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 3: Vision Zero 65% reduction in the number of people killed or seriously injured by 2022 (against 2005-09 levels), and a 70% reduction by 2030 (against 2010-14 levels) Number of people killed or seriously injured on London's roads 5,000 Actual progress 4,000 3,000 2,000 orn : ~s.. s. Tfl forecast or 1,000 we Target 0 e 2010 2015 2020 2025 2030 2035 2040 Possible. Data source: < Inspiring climate action TfL Travel in London 2025 Annual Overview",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-vision-zero.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-vision-zero.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-healthy-activity-levels",
+    "headline": "Healthy Activity Levels",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Walking",
+      "Bicycles"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-healthy-activity-levels.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-healthy-activity-levels.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 2: Healthy Activity Levels 70% of people reporting 20 minutes of walking or cycling on the previous day by 2041. London residents achieving at least 20 minutes of active travel per day 100% 80% 20% 0% 2010 2015 2020 2025 2030 2035 2040 /N /16 /21 /26 [31 /36 [Al Data source: TfL Travel in London 2025 Annual Overview Note: no data for COVID years Possible. Inspiring climate action",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-healthy-activity-levels.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-healthy-activity-levels.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "mayoral-transport-targets-sustainable-mode-share",
+    "headline": "Sustainable Mode Share",
+    "status": "Done",
+    "campaign": "Mayoral Transport Targets",
+    "relevant_cities": [
+      "London"
+    ],
+    "tags": [
+      "Line Chart",
+      "Mayoral Targets",
+      "Modal Share"
+    ],
+    "png_files": [
+      "mayoral-transport-targets-sustainable-mode-share.png"
+    ],
+    "svg_files": [
+      "mayoral-transport-targets-sustainable-mode-share.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Target 1: Sustainable Mode Share 80% of journeys will be made by sustainable modes (public transport, walking or cycling) by 2041. Active, efficient, and sustainable trip-based mode share in London 100% 40% 20% 0% 2010 2015 2020 2025 2030 2035 2040 Possible. Inspiring climate action Data source: TfL Travel in London 2025 Annual Overview",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-sustainable-mode-share.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/mayoral-transport-targets-sustainable-mode-share.svg"
+    ],
+    "text_extracted": true
+  },
+  {
     "id": "kerbside-greening-wordcloud-kerbside-greening",
     "headline": "Wordcloud Kerbside Greening",
     "status": "Done",
