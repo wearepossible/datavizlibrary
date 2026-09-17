@@ -1,5 +1,95 @@
 [
   {
+    "id": "kerbside-greening-wordcloud-kerbside-greening",
+    "headline": "Wordcloud Kerbside Greening",
+    "status": "Done",
+    "campaign": "Kerbside Greening",
+    "relevant_cities": [],
+    "tags": [
+      "Bar Chart",
+      "Housing"
+    ],
+    "png_files": [
+      "kerbside-greening-wordcloud-kerbside-greening.png"
+    ],
+    "svg_files": [
+      "kerbside-greening-wordcloud-kerbside-greening.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Less litter, more bins and more collections Lots of trees Communal water taps Trees Transform uprooted pavement into flower planters Cycle lanes Accessible playgrounds Kerb buildouts around the pavement which has been uprooted by trees Cleaner air No risk of damage or subsidence to driveways and houses Benches Flowers everywhere Places to get coffee Parklets Community composting Flat, even, trip-free pavement A council tree maintenance schedule Communication from the council Community and school gardens People being outside Places for young parents Bins for leaves, garden and garden waste Co-creation of a watering schedule Birds EV charging on the street so that people are encouraged to not pave over their front gardens More children be able to play outside More parks and park spaces Hedges along the side Places you can be for free Trees down the middle of the street Community orchard More bravery on behalf of the council in following these things through Sociability Find ways of shielding homes from the heat No cars are allowed to park at any time Daffodils, flowers and a beehive Durable plants Sitting out and chatting to people City farm Nicely paved and smooth roads with stone paving not tarmac Speed bumps to slow the traffic down Segregated cycle lanes, in both directions Streets that are not rat runs Kestrels, skylarks and starlings More green Lots of wildlife - parakeets, bumblebees, big trees, grass everywhere Nature front and centre Permeable parking spaces, which are more spread out Accessible bike storage, which has space for adapted cycles",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-wordcloud-kerbside-greening.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-wordcloud-kerbside-greening.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "kerbside-greening-fig-6-kerbside-greening-report",
+    "headline": "Fig 6 Kerbside Greening Report",
+    "status": "Done",
+    "campaign": "Kerbside Greening",
+    "relevant_cities": [],
+    "tags": [
+      "Bar Chart",
+      "Housing"
+    ],
+    "png_files": [
+      "kerbside-greening-fig-6-kerbside-greening-report.png"
+    ],
+    "svg_files": [
+      "kerbside-greening-fig-6-kerbside-greening-report.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Household is not deprived in any dimension Site 2 39.6% Newham 39.3% London 48.1% Respondents identify as Asian or Asian British Site 2 35.8% Newham 42.2% London 20.7% Do not own a car or van Site 2 49.6% Newham 51.7% London 42.1% Housing type: whole house Site 2 43.1% Newham 47.1% London 45.9% Housing tenure: own or with a mortgage Site 2 37.9% Newham 33.2% London 46.7% Housing tenure: socially rented Site 2 27.7% Newham 28.0% London 23.1% Housing tenure: privately rented or live rent-free Site 2 34.3% Newham 38.8% London 30.1%",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-fig-6-kerbside-greening-report.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-fig-6-kerbside-greening-report.svg"
+    ],
+    "text_extracted": true
+  },
+  {
+    "id": "kerbside-greening-fig-3-kerbside-greening-report",
+    "headline": "Fig 3 Kerbside Greening Report",
+    "status": "Done",
+    "campaign": "Kerbside Greening",
+    "relevant_cities": [],
+    "tags": [
+      "Bar Chart",
+      "Housing"
+    ],
+    "png_files": [
+      "kerbside-greening-fig-3-kerbside-greening-report.png"
+    ],
+    "svg_files": [
+      "kerbside-greening-fig-3-kerbside-greening-report.svg"
+    ],
+    "published_link": "",
+    "data_source": "",
+    "data_link": "",
+    "last_updated": "2026-09-17",
+    "image_text": "Household is not deprived in any dimension Site 1 46.1% Newham 39.3% London 48.1% Respondents identify as white Site 1 54.6% Newham 30.8% London 53.8% Do not own a car or van Site 1 64.8% Newham 51.7% London 42.1% Housing type: whole house Site 1 53.4% Newham 47.1% London 45.9% Housing tenure: own or with a mortgage Site 1 38.2% Newham 33.2% London 46.7% Housing tenure: socially rented Site 1 21.8% Newham 28.0% London 23.1% Housing tenure: privately rented or live rent-free Site 1 40.0% Newham 38.8% London 30.1%",
+    "has_images": true,
+    "png_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-fig-3-kerbside-greening-report.png"
+    ],
+    "svg_urls": [
+      "https://pub-083eded00aa04ff4b10dea5e1868aa1a.r2.dev/kerbside-greening-fig-3-kerbside-greening-report.svg"
+    ],
+    "text_extracted": true
+  },
+  {
     "id": "fixing-factory-fixing-factory-annual-impact",
     "headline": "Fixing Factory Annual Impact",
     "status": "Done",
