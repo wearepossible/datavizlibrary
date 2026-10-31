@@ -43,8 +43,7 @@
     "tags": [
       "Line Chart",
       "Mayoral Targets",
-      "CO2 Emissions",
-      "Greenhouse Gas Emissions"
+      "Electric Cars"
     ],
     "png_files": [
       "mayoral-transport-targets-climate-2.png"
@@ -307,7 +306,7 @@
       "London"
     ],
     "tags": [
-      "Line Chart",
+      "Bar Chart",
       "Mayoral Targets",
       "Road Safety"
     ],
