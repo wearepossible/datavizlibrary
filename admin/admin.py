@@ -35,6 +35,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import boto3
 import requests
@@ -103,6 +104,43 @@ app.secret_key = os.urandom(24)
 # default cap of 1000 form parts.  (Ignored by older Flask versions, which
 # don't enforce a limit at all.)
 app.config["MAX_FORM_PARTS"] = 20000
+
+
+# ── Cross-site protection ───────────────────────────────────────────────
+# The tool has no login because it only listens on this machine. But any
+# website open in the same browser can still make the browser send requests
+# to http://localhost:5001: a hidden form on a malicious page could delete
+# records or press Deploy, which pushes to the live site. With the login item
+# installed, the tool is running all day, so that window is always open.
+#
+# Two checks close it:
+#   1. The Host header must be the tool's own address. This stops "DNS
+#      rebinding", where an attacker's domain is made to resolve to 127.0.0.1
+#      so the browser treats their page as the tool itself.
+#   2. Anything that changes data (POST etc.) must come from the tool's own
+#      pages. Browsers add an Origin header naming the page that sent a form
+#      or fetch, and a web page can't forge it. Referer is the fallback for
+#      the rare request without an Origin; if neither is present, the request
+#      is refused rather than trusted.
+
+def _allowed_hosts():
+    """The addresses the tool is reached at, e.g. localhost:5001."""
+    return {f"localhost:{PORT}", f"127.0.0.1:{PORT}"}
+
+
+@app.before_request
+def reject_cross_site_requests():
+    allowed = _allowed_hosts()
+
+    if request.host not in allowed:
+        abort(403, "This admin tool only answers at " + URL)
+
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        source = request.headers.get("Origin") or request.headers.get("Referer")
+        # urlsplit("null").netloc is "", so an opaque "null" origin fails too.
+        source_host = urlsplit(source).netloc if source else ""
+        if source_host not in allowed:
+            abort(403, "Changes can only be made from the admin tool's own pages")
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 
