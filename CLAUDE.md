@@ -134,7 +134,7 @@ All four phases of the migration are complete:
 
 - **Migration scripts**: Python (requests, python-dotenv, pytesseract, Pillow, cairosvg, boto3)
 - **Static site**: Vanilla HTML/CSS/JS (no build step — keeps it simple and long-lived)
-- **Admin tool**: Python Flask (local only, no auth needed)
+- **Admin tool**: Python Flask (local only, no login; refuses cross-site requests)
 - **Image hosting**: Cloudflare R2 via S3-compatible API (boto3)
 - **Deployment**: Netlify (auto-deploy on push)
 
@@ -240,7 +240,7 @@ The static site uses a lightweight client-side relevancy search:
 - SVG files are served with `image/svg+xml` content type from R2 (explicitly set during upload)
 - Some records have multiple attachments per field — handled with numeric suffixes
 - The password gate on the public site is a SHA-256 client-side check — a lightweight barrier, not a security boundary
-- The admin tool is local-only (Flask dev server) — never deployed publicly
+- The admin tool is local-only (Flask dev server) — never deployed publicly. It has no login, but it refuses requests addressed to anything other than `localhost:5001` / `127.0.0.1:5001`, and refuses any POST whose `Origin` (or, failing that, `Referer`) isn't one of its own pages. Without that, any website open in the same browser could submit its forms — delete records or press Deploy — while it runs, which with the login item is all day. See `reject_cross_site_requests()` in `admin.py`
 - The default grid shuffles records randomly on each page load so the library feels fresh
 - The shuffle happens once per page load, so switching the sort control back to
   "Random order" restores that page's order rather than reshuffling
